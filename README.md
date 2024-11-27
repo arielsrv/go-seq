@@ -1,6 +1,6 @@
 # go-seq
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/sectrean/go-seq.svg)](https://pkg.go.dev/github.com/sectrea/go-seq)
+[![Go Reference](https://pkg.go.dev/badge/github.com/sectrean/go-seq.svg)](https://pkg.go.dev/github.com/sectrean/go-seq)
 
 
 **go-seq** (pronounced "go seek") is a Go package for working with *seq*uences.

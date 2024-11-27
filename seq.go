@@ -144,7 +144,7 @@ func Distinct[V comparable](seq iter.Seq[V]) iter.Seq[V] {
 	}
 }
 
-// DistinctFunc returns distinct elements from a sequence according to the given key selector
+// DistinctFunc returns distinct values from a sequence according to the given key selector
 // function.
 func DistinctFunc[V any, K comparable](seq iter.Seq[V], f func(V) K) iter.Seq[V] {
 	return func(yield func(V) bool) {

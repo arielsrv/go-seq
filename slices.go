@@ -42,7 +42,7 @@ func SortedFunc[V any](seq iter.Seq[V], cmp func(V, V) int) []V {
 }
 
 // SortedStable collects the values from the input sequence into a slice and then sorts it using the
-// given comparison function maintaining the order of equal elements.
+// given comparison function maintaining the order of equal values.
 func SortedStableFunc[V any](seq iter.Seq[V], cmp func(V, V) int) []V {
 	return slices.SortedStableFunc(seq, cmp)
 }
