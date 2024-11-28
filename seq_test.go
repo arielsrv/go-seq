@@ -50,7 +50,7 @@ func TestAggregate(t *testing.T) {
 		},
 		{
 			name: "empty",
-			seq:  seq.Empty[int](),
+			seq:  seq.Yield[int](),
 			init: 0,
 			f:    func(acc, v int) int { return acc + v },
 			want: 0,
@@ -86,7 +86,7 @@ func TestAll(t *testing.T) {
 		},
 		{
 			name: "empty",
-			seq:  seq.Empty[int](),
+			seq:  seq.Yield[int](),
 			f:    isEven,
 			want: true,
 		},
@@ -113,7 +113,7 @@ func TestAny(t *testing.T) {
 		},
 		{
 			name: "empty",
-			seq:  seq.Empty[int](),
+			seq:  seq.Yield[int](),
 			want: false,
 		},
 	}
@@ -147,7 +147,7 @@ func TestAnyFunc(t *testing.T) {
 		},
 		{
 			name: "empty",
-			seq:  seq.Empty[int](),
+			seq:  seq.Yield[int](),
 			f:    isEven,
 			want: false,
 		},
@@ -176,7 +176,7 @@ func TestAppend(t *testing.T) {
 		},
 		{
 			name: "empty",
-			seq:  seq.Empty[int](),
+			seq:  seq.Yield[int](),
 			add:  []int{1, 2, 3},
 			want: []int{1, 2, 3},
 		},
@@ -229,7 +229,7 @@ func TestChunk(t *testing.T) {
 		},
 		{
 			name: "empty sequence",
-			seq:  seq.Empty[int](),
+			seq:  seq.Yield[int](),
 			size: 3,
 			want: nil,
 		},
@@ -267,12 +267,12 @@ func TestConcat(t *testing.T) {
 		},
 		{
 			name: "one empty",
-			seqs: []iter.Seq[int]{seq.Yield(1, 2), seq.Empty[int](), seq.Yield(3, 4)},
+			seqs: []iter.Seq[int]{seq.Yield(1, 2), seq.Yield[int](), seq.Yield(3, 4)},
 			want: []int{1, 2, 3, 4},
 		},
 		{
 			name: "all empty",
-			seqs: []iter.Seq[int]{seq.Empty[int](), seq.Empty[int]()},
+			seqs: []iter.Seq[int]{seq.Yield[int](), seq.Yield[int]()},
 			want: nil,
 		},
 		{
@@ -311,7 +311,7 @@ func TestContains(t *testing.T) {
 		},
 		{
 			name: "empty",
-			seq:  seq.Empty[int](),
+			seq:  seq.Yield[int](),
 			val:  1,
 			want: false,
 		},
@@ -338,7 +338,7 @@ func TestCount(t *testing.T) {
 		},
 		{
 			name: "empty",
-			seq:  seq.Empty[int](),
+			seq:  seq.Yield[int](),
 			want: 0,
 		},
 		{
@@ -377,7 +377,7 @@ func TestCountFunc(t *testing.T) {
 		},
 		{
 			name: "empty",
-			seq:  seq.Empty[int](),
+			seq:  seq.Yield[int](),
 			f:    isEven,
 			want: 0,
 		},
@@ -414,7 +414,7 @@ func TestDistinct(t *testing.T) {
 		},
 		{
 			name: "empty",
-			seq:  seq.Empty[int](),
+			seq:  seq.Yield[int](),
 			want: nil,
 		},
 		{
@@ -453,7 +453,7 @@ func TestDistinctFunc(t *testing.T) {
 		},
 		{
 			name: "empty",
-			seq:  seq.Empty[int](),
+			seq:  seq.Yield[int](),
 			f:    valString[int],
 			want: nil,
 		},
@@ -505,7 +505,7 @@ func TestValueAt(t *testing.T) {
 		},
 		{
 			name:  "empty sequence",
-			seq:   seq.Empty[int](),
+			seq:   seq.Yield[int](),
 			index: 2,
 			want:  0,
 			ok:    false,
@@ -528,7 +528,7 @@ func TestValueAt(t *testing.T) {
 }
 
 func TestEmpty(t *testing.T) {
-	got := seq.Empty[int]()
+	got := seq.Yield[int]()
 	seqtest.AssertEqual(t, nil, got)
 }
 
@@ -553,7 +553,7 @@ func TestFirst(t *testing.T) {
 		},
 		{
 			name: "empty",
-			seq:  seq.Empty[int](),
+			seq:  seq.Yield[int](),
 			want: 0,
 			ok:   false,
 		},
@@ -589,7 +589,7 @@ func TestLast(t *testing.T) {
 		},
 		{
 			name: "empty",
-			seq:  seq.Empty[int](),
+			seq:  seq.Yield[int](),
 			want: 0,
 			ok:   false,
 		},
@@ -625,7 +625,7 @@ func TestMax(t *testing.T) {
 		},
 		{
 			name: "empty sequence",
-			seq:  seq.Empty[int](),
+			seq:  seq.Yield[int](),
 			want: 0,
 			ok:   false,
 		},
@@ -661,7 +661,7 @@ func TestMin(t *testing.T) {
 		},
 		{
 			name: "empty",
-			seq:  seq.Empty[int](),
+			seq:  seq.Yield[int](),
 			want: 0,
 			ok:   false,
 		},
@@ -691,7 +691,7 @@ func TestPrepend(t *testing.T) {
 		},
 		{
 			name: "empty",
-			seq:  seq.Empty[int](),
+			seq:  seq.Yield[int](),
 			vals: []int{1, 2, 3},
 			want: []int{1, 2, 3},
 		},
@@ -709,7 +709,7 @@ func TestPrepend(t *testing.T) {
 		},
 		{
 			name: "both empty",
-			seq:  seq.Empty[int](),
+			seq:  seq.Yield[int](),
 			vals: []int{},
 			want: nil,
 		},
@@ -847,7 +847,7 @@ func TestSelect(t *testing.T) {
 		},
 		{
 			name: "empty",
-			seq:  seq.Empty[int](),
+			seq:  seq.Yield[int](),
 			f:    valString[int],
 			want: nil,
 		},
@@ -888,7 +888,7 @@ func TestSelectKeys(t *testing.T) {
 		},
 		{
 			name: "empty",
-			seq:  seq.Empty[int](),
+			seq:  seq.Yield[int](),
 			f:    valString[int],
 			want: nil,
 		},
@@ -923,7 +923,7 @@ func TestSelectMany(t *testing.T) {
 		},
 		{
 			name: "empty outer",
-			seq:  seq.Empty[int](),
+			seq:  seq.Yield[int](),
 			f:    repeat2[int],
 			want: nil,
 		},
@@ -931,7 +931,7 @@ func TestSelectMany(t *testing.T) {
 			name: "empty inner",
 			seq:  seq.Yield(1, 2, 3),
 			f: func(int) iter.Seq[int] {
-				return seq.Empty[int]()
+				return seq.Yield[int]()
 			},
 			want: nil,
 		},

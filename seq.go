@@ -165,11 +165,6 @@ func DistinctFunc[V any, K comparable](seq iter.Seq[V], f func(V) K) iter.Seq[V]
 	}
 }
 
-// Empty returns an empty sequence.
-func Empty[V any]() iter.Seq[V] {
-	return func(yield func(V) bool) {}
-}
-
 // First returns the first value of a sequence.
 // A second return value indicates whether the result is valid,
 // (i.e., there was at least one value in the sequence).
@@ -455,6 +450,15 @@ func ValueAt[V any](seq iter.Seq[V], index int) (V, bool) {
 }
 
 // Yield returns a sequence that yields the given values.
+// This is useful for creating an empty sequence or a sequence with a few values.
+//
+// Examples:
+//
+//	// empty sequence, yields nothing
+//	empty := seq.Yield[int]()
+//
+//	// yields (1), (2), (3)
+//	vals := seq.Yield(1, 2, 3)
 func Yield[V any](vals ...V) iter.Seq[V] {
 	return func(yield func(V) bool) {
 		for _, v := range vals {

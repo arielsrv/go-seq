@@ -42,11 +42,6 @@ func DistinctKeys[K comparable, V any](seq iter.Seq2[K, V]) iter.Seq2[K, V] {
 	}
 }
 
-// Empty2 returns an empty key-value sequence.
-func Empty2[K, V any]() iter.Seq2[K, V] {
-	return func(yield func(K, V) bool) {}
-}
-
 // Keys returns the keys from a key-value sequence.
 func Keys[K, V any](seq iter.Seq2[K, V]) iter.Seq[K] {
 	return func(yield func(K) bool) {
