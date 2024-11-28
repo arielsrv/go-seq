@@ -257,13 +257,13 @@ func Range[V constraints.Integer](start, end, step V) iter.Seq[V] {
 }
 
 // Repeat returns a sequence that yields the given value the given number of times.
-func Repeat[V any](val V, count int) iter.Seq[V] {
-	if count < 0 {
+func Repeat[V any](val V, n int) iter.Seq[V] {
+	if n < 0 {
 		panic("count must be non-negative")
 	}
 
 	return func(yield func(V) bool) {
-		for i := 0; i < count; i++ {
+		for i := 0; i < n; i++ {
 			if !yield(val) {
 				return
 			}
@@ -341,11 +341,11 @@ func Single[V any](seq iter.Seq[V]) (V, bool) {
 }
 
 // Skip bypasses the given number of values in a sequence and returns the remaining values.
-func Skip[V any](seq iter.Seq[V], num int) iter.Seq[V] {
+func Skip[V any](seq iter.Seq[V], n int) iter.Seq[V] {
 	return func(yield func(V) bool) {
 		i := 0
 		for v := range seq {
-			if i >= num {
+			if i >= n {
 				if !yield(v) {
 					return
 				}
@@ -386,11 +386,11 @@ func Sum[V constraints.Integer | constraints.Float](seq iter.Seq[V]) V {
 }
 
 // Take returns the given number of values from the start of the sequence.
-func Take[V any](seq iter.Seq[V], num int) iter.Seq[V] {
+func Take[V any](seq iter.Seq[V], n int) iter.Seq[V] {
 	return func(yield func(V) bool) {
 		i := 0
 		for v := range seq {
-			if i >= num {
+			if i >= n {
 				return
 			}
 			if !yield(v) {
