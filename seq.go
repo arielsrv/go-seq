@@ -17,6 +17,8 @@ func Aggregate[V, A any](seq iter.Seq[V], init A, f func(A, V) A) A {
 }
 
 // All determines if all values of a sequence satisfy a condition.
+//
+// This will return true if the sequence is empty.
 func All[V any](seq iter.Seq[V], f func(V) bool) bool {
 	for v := range seq {
 		if !f(v) {
@@ -35,6 +37,8 @@ func Any[V any](seq iter.Seq[V]) bool {
 }
 
 // AnyFunc determines if any values of a sequence satisfy a condition.
+//
+// This will return false if the sequence is empty.
 func AnyFunc[V any](seq iter.Seq[V], f func(V) bool) bool {
 	for v := range seq {
 		if f(v) {
@@ -161,28 +165,6 @@ func DistinctFunc[V any, K comparable](seq iter.Seq[V], f func(V) K) iter.Seq[V]
 	}
 }
 
-// ElementAt returns the value at the given index in the sequence.
-// A second return value indicates whether the result is valid,
-// (i.e., the index was within the bounds of the sequence).
-//
-// This will panic if the index is negative.
-func ElementAt[V any](seq iter.Seq[V], index int) (V, bool) {
-	if index < 0 {
-		panic("index must be non-negative")
-	}
-
-	i := 0
-	for v := range seq {
-		if i == index {
-			return v, true
-		}
-		i++
-	}
-
-	var v V
-	return v, false
-}
-
 // Empty returns an empty sequence.
 func Empty[V any]() iter.Seq[V] {
 	return func(yield func(V) bool) {}
@@ -243,17 +225,6 @@ func Min[V cmp.Ordered](seq iter.Seq[V]) (V, bool) {
 	return min, found
 }
 
-// NewSeq returns a sequence that yields the given values.
-func NewSeq[V any](vals ...V) iter.Seq[V] {
-	return func(yield func(V) bool) {
-		for _, v := range vals {
-			if !yield(v) {
-				return
-			}
-		}
-	}
-}
-
 // Prepend adds the given values to the beginning of the sequence.
 func Prepend[V any](seq iter.Seq[V], vals ...V) iter.Seq[V] {
 	return func(yield func(V) bool) {
@@ -287,6 +258,10 @@ func Range[V constraints.Integer](start, end, step V) iter.Seq[V] {
 
 // Repeat returns a sequence that yields the given value the given number of times.
 func Repeat[V any](val V, count int) iter.Seq[V] {
+	if count < 0 {
+		panic("count must be non-negative")
+	}
+
 	return func(yield func(V) bool) {
 		for i := 0; i < count; i++ {
 			if !yield(val) {
@@ -452,6 +427,39 @@ func Where[V any](seq iter.Seq[V], f func(V) bool) iter.Seq[V] {
 				if !yield(v) {
 					return
 				}
+			}
+		}
+	}
+}
+
+// ValueAt returns the value at the given index in the sequence.
+// A second return value indicates whether the result is valid,
+// (i.e., the index was within the bounds of the sequence).
+//
+// This will panic if the index is negative.
+func ValueAt[V any](seq iter.Seq[V], index int) (V, bool) {
+	if index < 0 {
+		panic("index must be non-negative")
+	}
+
+	i := 0
+	for v := range seq {
+		if i == index {
+			return v, true
+		}
+		i++
+	}
+
+	var v V
+	return v, false
+}
+
+// Yield returns a sequence that yields the given values.
+func Yield[V any](vals ...V) iter.Seq[V] {
+	return func(yield func(V) bool) {
+		for _, v := range vals {
+			if !yield(v) {
+				return
 			}
 		}
 	}

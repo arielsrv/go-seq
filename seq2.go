@@ -27,7 +27,7 @@ func ContainsKey[K comparable, V any](seq iter.Seq2[K, V], key K) bool {
 	return false
 }
 
-// DistinctKeys returns distinct key-value pairs from a sequence by comparing keys.
+// DistinctKeys returns distinct key-value pairs from a sequence by comparing the keys.
 func DistinctKeys[K comparable, V any](seq iter.Seq2[K, V]) iter.Seq2[K, V] {
 	return func(yield func(K, V) bool) {
 		seen := make(map[K]struct{})
@@ -52,17 +52,6 @@ func Keys[K, V any](seq iter.Seq2[K, V]) iter.Seq[K] {
 	return func(yield func(K) bool) {
 		for k := range seq {
 			if !yield(k) {
-				return
-			}
-		}
-	}
-}
-
-// NewSeq2 returns a key-value sequence that yields the given values and their indices.
-func NewSeq2[V any](vals ...V) iter.Seq2[int, V] {
-	return func(yield func(int, V) bool) {
-		for i, v := range vals {
-			if !yield(i, v) {
 				return
 			}
 		}
@@ -98,6 +87,22 @@ func Values[K, V any](seq iter.Seq2[K, V]) iter.Seq[V] {
 	return func(yield func(V) bool) {
 		for _, v := range seq {
 			if !yield(v) {
+				return
+			}
+		}
+	}
+}
+
+// Yield2 returns a key-value sequence that yields the given values and their indices.
+//
+// Example:
+//
+//	// yields (0, "a"), (1, "b"), (2, "c")
+//	seq := seq.Yield2("a", "b", "c")
+func Yield2[V any](vals ...V) iter.Seq2[int, V] {
+	return func(yield func(int, V) bool) {
+		for i, v := range vals {
+			if !yield(i, v) {
 				return
 			}
 		}
