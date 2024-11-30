@@ -432,41 +432,6 @@ func TestDistinct(t *testing.T) {
 	}
 }
 
-func TestDistinctFunc(t *testing.T) {
-	tests := []struct {
-		name string
-		seq  iter.Seq[int]
-		f    func(int) string
-		want []int
-	}{
-		{
-			name: "some",
-			seq:  seq.Yield(1, 2, 2, 3, 4, 4, 5),
-			f:    valString[int],
-			want: []int{1, 2, 3, 4, 5},
-		},
-		{
-			name: "all unique",
-			seq:  seq.Yield(1, 2, 3, 4, 5),
-			f:    valString[int],
-			want: []int{1, 2, 3, 4, 5},
-		},
-		{
-			name: "empty",
-			seq:  seq.Yield[int](),
-			f:    valString[int],
-			want: nil,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := seq.DistinctFunc(tt.seq, tt.f)
-			seqtest.AssertEqual(t, tt.want, got)
-		})
-	}
-}
-
 func TestValueAt(t *testing.T) {
 	tests := []struct {
 		name  string

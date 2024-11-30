@@ -79,7 +79,7 @@ func Average[V constraints.Integer | constraints.Float](seq iter.Seq[V]) V {
 	return sum / V(count)
 }
 
-// Chunk splits the values of a sequence into chunks of a fixed size.
+// Chunk splits the values of a sequence into chunks of a given size at most.
 func Chunk[V any](seq iter.Seq[V], size int) iter.Seq[[]V] {
 	return func(yield func([]V) bool) {
 		chunk := make([]V, 0, size)
@@ -123,19 +123,10 @@ func Contains[V comparable](seq iter.Seq[V], val V) bool {
 	return false
 }
 
-// ContainsFunc determines if a sequence contains a value using a function to select a
-// comparable value.
-//
-// Example:
-//
-//	var itemID int
-//	var items iter.Seq[*Item]
-//	found := seq.ContainsFunc(items, itemID, func(i *Item) string {
-//		return i.ItemID
-//	})
-func ContainsFunc[V any, C comparable](seq iter.Seq[V], val C, f func(V) C) bool {
+// ContainsFunc determines if a sequence contains a value using a comparison function.
+func ContainsFunc[V any](seq iter.Seq[V], val V, cmp func(V, V) bool) bool {
 	for v := range seq {
-		if f(v) == val {
+		if cmp(v, val) {
 			return true
 		}
 	}
@@ -172,39 +163,48 @@ func CountFunc[V any](seq iter.Seq[V], f func(V) bool) int {
 	return count
 }
 
-// Distinct returns distinct values from a sequence.
-//
-// The first occurrence is yielded, and any subsequent occurrences are ignored.
-func Distinct[V comparable](seq iter.Seq[V]) iter.Seq[V] {
-	return func(yield func(V) bool) {
-		seen := make(map[V]struct{})
-		for v := range seq {
-			if _, ok := seen[v]; !ok {
-				seen[v] = struct{}{}
-				if !yield(v) {
-					return
-				}
-			}
+// Equal determines if two sequences are equal.
+func Equal[V comparable](seq1, seq2 iter.Seq[V]) bool {
+	nextV2, done := iter.Pull(seq2)
+	defer done()
+
+	for v1 := range seq1 {
+		v2, ok := nextV2()
+		if !ok {
+			// seq2 has fewer values
+			return false
+		}
+		if v1 != v2 {
+			// check if each value is equal
+			return false
 		}
 	}
+
+	// not equal if seq2 has more values
+	_, more := nextV2()
+	return !more
 }
 
-// DistinctFunc returns distinct values from a sequence using a function to select a comparable value.
-//
-// The first occurrence is yielded, and any subsequent occurrences are ignored.
-func DistinctFunc[V any, C comparable](seq iter.Seq[V], f func(V) C) iter.Seq[V] {
-	return func(yield func(V) bool) {
-		seen := make(map[C]struct{})
-		for v := range seq {
-			c := f(v)
-			if _, ok := seen[c]; !ok {
-				seen[c] = struct{}{}
-				if !yield(v) {
-					return
-				}
-			}
+// EqualFunc determines if two sequences are equal using a function to compare values.
+func EqualFunc[V any](seq1, seq2 iter.Seq[V], cmp func(V, V) bool) bool {
+	nextV2, done := iter.Pull(seq2)
+	defer done()
+
+	for v1 := range seq1 {
+		v2, ok := nextV2()
+		if !ok {
+			// seq2 has fewer values
+			return false
+		}
+		if !cmp(v1, v2) {
+			// check if each value is equal
+			return false
 		}
 	}
+
+	// not equal if seq2 has more values
+	_, more := nextV2()
+	return !more
 }
 
 // First returns the first value of a sequence.
@@ -224,11 +224,11 @@ func First[V any](seq iter.Seq[V]) (V, bool) {
 // A second return value indicates whether the sequence contained any values.
 func Last[V any](seq iter.Seq[V]) (V, bool) {
 	var v V
-	found := false
+	var found bool
+
 	for v = range seq {
 		found = true
 	}
-
 	return v, found
 }
 
@@ -238,11 +238,47 @@ func Last[V any](seq iter.Seq[V]) (V, bool) {
 func Max[V cmp.Ordered](seq iter.Seq[V]) (V, bool) {
 	var max V
 	var found bool
+
 	for v := range seq {
-		if !found || v > max {
+		if v > max {
 			max = v
-			found = true
 		}
+		found = true
+	}
+	return max, found
+}
+
+// MaxBy returns the maximum value in a sequence using a function to select a comparable value.
+//
+// A second return value indicates whether the sequence contained any values.
+func MaxBy[V any, C cmp.Ordered](seq iter.Seq[V], f func(V) C) (V, bool) {
+	var maxC C
+	var maxVal V
+	var found bool
+
+	for v := range seq {
+		c := f(v)
+		if c > maxC {
+			maxC = c
+			maxVal = v
+		}
+		found = true
+	}
+	return maxVal, found
+}
+
+// MaxFunc returns the maximum value in a sequence using a comparison function.
+//
+// A second return value indicates whether the sequence contained any values.
+func MaxFunc[V any](seq iter.Seq[V], cmp func(V, V) int) (V, bool) {
+	var max V
+	var found bool
+
+	for v := range seq {
+		if cmp(v, max) > 0 {
+			max = v
+		}
+		found = true
 	}
 	return max, found
 }
@@ -254,12 +290,58 @@ func Min[V cmp.Ordered](seq iter.Seq[V]) (V, bool) {
 	var min V
 	var found bool
 	for v := range seq {
-		if !found || v < min {
+		if v < min {
 			min = v
-			found = true
 		}
+		found = true
 	}
 	return min, found
+}
+
+// MinBy returns the minimum value in a sequence using a function to select a comparable value.
+func MinBy[V any, C cmp.Ordered](seq iter.Seq[V], f func(V) C) (V, bool) {
+	var minC C
+	var minVal V
+	var found bool
+
+	for v := range seq {
+		c := f(v)
+		if c < minC {
+			minC = c
+			minVal = v
+		}
+		found = true
+	}
+	return minVal, found
+}
+
+// MinFunc returns the minimum value in a sequence using a comparison function.
+//
+// A second return value indicates whether the sequence contained any values.
+func MinFunc[V any](seq iter.Seq[V], cmp func(V, V) int) (V, bool) {
+	var min V
+	var found bool
+	for v := range seq {
+		if cmp(v, min) < 0 {
+			min = v
+		}
+		found = true
+	}
+	return min, found
+}
+
+// OfType filters a sequence based on a type.
+func OfType[V, VOut any](seq iter.Seq[V]) iter.Seq[VOut] {
+	return func(yield func(VOut) bool) {
+		for v := range seq {
+			var a any = v
+			if out, ok := a.(VOut); ok {
+				if !yield(out) {
+					return
+				}
+			}
+		}
+	}
 }
 
 // Prepend adds values to the beginning of a sequence.
@@ -320,8 +402,7 @@ func Select[V, VOut any](seq iter.Seq[V], f func(V) VOut) iter.Seq[VOut] {
 	}
 }
 
-// SelectKeys projects each value of a sequence into a key-value pair using a function to
-// select a key.
+// SelectKeys projects each value of a sequence into a key-value pair.
 func SelectKeys[K, V any](seq iter.Seq[V], f func(V) K) iter.Seq2[K, V] {
 	return func(yield func(K, V) bool) {
 		for v := range seq {
@@ -347,20 +428,6 @@ func SelectMany[V, VOut any](seq iter.Seq[V], f func(V) iter.Seq[VOut]) iter.Seq
 	}
 }
 
-// SelectSlices projects each value of a sequence into a slice and then flattens the resulting slices into
-// a single sequence.
-func SelectSlices[V, VOut any](seq iter.Seq[V], f func(V) []VOut) iter.Seq[VOut] {
-	return func(yield func(VOut) bool) {
-		for v := range seq {
-			for _, out := range f(v) {
-				if !yield(out) {
-					return
-				}
-			}
-		}
-	}
-}
-
 // Single returns the only value in a sequence.
 //
 // A second return value indicates whether the sequence contained exactly one value.
@@ -370,7 +437,8 @@ func Single[V any](seq iter.Seq[V]) (V, bool) {
 
 	for v := range seq {
 		if found {
-			return first, false
+			var zero V
+			return zero, false
 		}
 		first = v
 		found = true
