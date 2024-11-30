@@ -159,7 +159,7 @@ func CountFunc[V any](seq iter.Seq[V], f func(V) bool) int {
 
 // Distinct returns distinct values from a sequence.
 //
-// The first occurrence is yielded, and any subsequent occurrences are discarded.
+// The first occurrence is yielded, and any subsequent occurrences are ignored.
 func Distinct[V comparable](seq iter.Seq[V]) iter.Seq[V] {
 	return func(yield func(V) bool) {
 		seen := make(map[V]struct{})
@@ -176,7 +176,7 @@ func Distinct[V comparable](seq iter.Seq[V]) iter.Seq[V] {
 
 // DistinctFunc returns distinct values from a sequence using a function to select a comparable value.
 //
-// The first occurrence is yielded, and any subsequent occurrences are discarded.
+// The first occurrence is yielded, and any subsequent occurrences are ignored.
 func DistinctFunc[V any, C comparable](seq iter.Seq[V], f func(V) C) iter.Seq[V] {
 	return func(yield func(V) bool) {
 		seen := make(map[C]struct{})
@@ -193,8 +193,8 @@ func DistinctFunc[V any, C comparable](seq iter.Seq[V], f func(V) C) iter.Seq[V]
 }
 
 // First returns the first value of a sequence.
-// A second return value indicates whether the result is valid,
-// (i.e., there was at least one value in the sequence).
+//
+// A second return value indicates whether the sequence contained any values.
 func First[V any](seq iter.Seq[V]) (V, bool) {
 	var v V
 	for v = range seq {
@@ -205,8 +205,8 @@ func First[V any](seq iter.Seq[V]) (V, bool) {
 }
 
 // Last returns the last value of a sequence.
-// A second return value indicates whether the result is valid,
-// (i.e., there was at least one value in the sequence).
+//
+// A second return value indicates whether the sequence contained any values.
 func Last[V any](seq iter.Seq[V]) (V, bool) {
 	var v V
 	found := false
@@ -218,8 +218,8 @@ func Last[V any](seq iter.Seq[V]) (V, bool) {
 }
 
 // Max returns the maximum value in a sequence.
-// A second return value indicates whether the result is valid,
-// (i.e., there was at least one value in the sequence).
+//
+// A second return value indicates whether the sequence contained any values.
 func Max[V cmp.Ordered](seq iter.Seq[V]) (V, bool) {
 	var max V
 	var found bool
@@ -233,8 +233,8 @@ func Max[V cmp.Ordered](seq iter.Seq[V]) (V, bool) {
 }
 
 // Min returns the minimum value in a sequence.
-// A second return value indicates whether the result is valid,
-// (i.e., there was at least one value in the sequence).
+//
+// A second return value indicates whether the sequence contained any values.
 func Min[V cmp.Ordered](seq iter.Seq[V]) (V, bool) {
 	var min V
 	var found bool
@@ -347,7 +347,8 @@ func SelectSlices[V, VOut any](seq iter.Seq[V], f func(V) []VOut) iter.Seq[VOut]
 }
 
 // Single returns the only value in a sequence.
-// A second return value indicates whether there was exactly one value in the sequence.
+//
+// A second return value indicates whether the sequence contained exactly one value.
 func Single[V any](seq iter.Seq[V]) (V, bool) {
 	var first V
 	var found bool
@@ -364,8 +365,9 @@ func Single[V any](seq iter.Seq[V]) (V, bool) {
 }
 
 // SingleFunc returns the only value in a sequence that satisfies a predicate.
-// A second return value indicates whether there was exactly one value in the
-// sequence that satisfied the predicate.
+//
+// A second return value indicates whether the sequence contained exactly one value
+// that satisfied the predicate.
 func SingleFunc[V any](seq iter.Seq[V], f func(V) bool) (V, bool) {
 	var first V
 	var found bool
@@ -478,7 +480,7 @@ func Where[V any](seq iter.Seq[V], f func(V) bool) iter.Seq[V] {
 
 // ValueAt returns the value at a given index in a sequence.
 //
-// A second return value indicates whether there were enough values in the sequence.
+// A second return value indicates whether the given index was within the bounds of the sequence.
 // This will panic if the given index is negative.
 func ValueAt[V any](seq iter.Seq[V], index int) (V, bool) {
 	if index < 0 {
