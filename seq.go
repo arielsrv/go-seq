@@ -18,7 +18,7 @@ func Aggregate[V, A any](seq iter.Seq[V], init A, f func(A, V) A) A {
 
 // All determines if all values of a sequence satisfy a condition.
 //
-// This will return true if the sequence is empty.
+// This will return true if the sequence was empty.
 func All[V any](seq iter.Seq[V], f func(V) bool) bool {
 	for v := range seq {
 		if !f(v) {
@@ -38,7 +38,7 @@ func Any[V any](seq iter.Seq[V]) bool {
 
 // AnyFunc determines if any values of a sequence satisfy a condition.
 //
-// This will return false if the sequence is empty.
+// This will return false if the sequence was empty.
 func AnyFunc[V any](seq iter.Seq[V], f func(V) bool) bool {
 	for v := range seq {
 		if f(v) {
@@ -48,7 +48,7 @@ func AnyFunc[V any](seq iter.Seq[V], f func(V) bool) bool {
 	return false
 }
 
-// Append adds the given values to the end of a sequence.
+// Append adds values to the end of a sequence.
 func Append[V any](seq iter.Seq[V], vals ...V) iter.Seq[V] {
 	return func(yield func(V) bool) {
 		for v := range seq {
@@ -64,7 +64,7 @@ func Append[V any](seq iter.Seq[V], vals ...V) iter.Seq[V] {
 	}
 }
 
-// Chunk splits the values of a sequence into chunks of the given size.
+// Chunk splits the values of a sequence into chunks of a fixed size.
 func Chunk[V any](seq iter.Seq[V], size int) iter.Seq[[]V] {
 	return func(yield func([]V) bool) {
 		chunk := make([]V, 0, size)
@@ -98,7 +98,7 @@ func Concat[V any](seqs ...iter.Seq[V]) iter.Seq[V] {
 	}
 }
 
-// Contains determines if the sequence contains the given value.
+// Contains determines if a sequence contains a value.
 func Contains[V comparable](seq iter.Seq[V], val V) bool {
 	for v := range seq {
 		if v == val {
@@ -108,9 +108,30 @@ func Contains[V comparable](seq iter.Seq[V], val V) bool {
 	return false
 }
 
-// Count returns the number of values in the sequence.
+// ContainsFunc determines if a sequence contains a value using a function to select a
+// comparable value.
 //
+// Example:
+//
+//	var itemID int
+//	var items iter.Seq[*Item]
+//	found := seq.ContainsFunc(items, itemID, func(i *Item) string {
+//		return i.ItemID
+//	})
+func ContainsFunc[V any, C comparable](seq iter.Seq[V], val C, f func(V) C) bool {
+	for v := range seq {
+		if f(v) == val {
+			return true
+		}
+	}
+	return false
+}
+
+// Count returns the number of values in a sequence.
+//
+// This will iterate over the entire sequence to count the values.
 // Use [Any] instead if you only need to check whether the sequence has any values.
+// Use [Single] instead if you only need to check whether the sequence has exactly one value.
 func Count[V any](seq iter.Seq[V]) int {
 	count := 0
 	for range seq {
@@ -119,10 +140,13 @@ func Count[V any](seq iter.Seq[V]) int {
 	return count
 }
 
-// CountFunc returns the number of values in the sequence that satisfy the predicate.
+// CountFunc returns the number of values in a sequence that satisfy a predicate.
 //
+// This will iterate over the entire sequence to count the values.
 // Use [AnyFunc] instead if you only need to check whether the sequence has any values that satisfy
-// the predicate.
+// a predicate.
+// Use [SingleFunc] instead if you only need to check whether the sequence has exactly one value that
+// satisfies a predicate.
 func CountFunc[V any](seq iter.Seq[V], f func(V) bool) int {
 	count := 0
 	for v := range seq {
@@ -134,6 +158,8 @@ func CountFunc[V any](seq iter.Seq[V], f func(V) bool) int {
 }
 
 // Distinct returns distinct values from a sequence.
+//
+// The first occurrence is yielded, and any subsequent occurrences are discarded.
 func Distinct[V comparable](seq iter.Seq[V]) iter.Seq[V] {
 	return func(yield func(V) bool) {
 		seen := make(map[V]struct{})
@@ -148,15 +174,16 @@ func Distinct[V comparable](seq iter.Seq[V]) iter.Seq[V] {
 	}
 }
 
-// DistinctFunc returns distinct values from a sequence according to the given key selector
-// function.
-func DistinctFunc[V any, K comparable](seq iter.Seq[V], f func(V) K) iter.Seq[V] {
+// DistinctFunc returns distinct values from a sequence using a function to select a comparable value.
+//
+// The first occurrence is yielded, and any subsequent occurrences are discarded.
+func DistinctFunc[V any, C comparable](seq iter.Seq[V], f func(V) C) iter.Seq[V] {
 	return func(yield func(V) bool) {
-		seen := make(map[K]struct{})
+		seen := make(map[C]struct{})
 		for v := range seq {
-			k := f(v)
-			if _, ok := seen[k]; !ok {
-				seen[k] = struct{}{}
+			c := f(v)
+			if _, ok := seen[c]; !ok {
+				seen[c] = struct{}{}
 				if !yield(v) {
 					return
 				}
@@ -220,7 +247,7 @@ func Min[V cmp.Ordered](seq iter.Seq[V]) (V, bool) {
 	return min, found
 }
 
-// Prepend adds the given values to the beginning of the sequence.
+// Prepend adds values to the beginning of a sequence.
 func Prepend[V any](seq iter.Seq[V], vals ...V) iter.Seq[V] {
 	return func(yield func(V) bool) {
 		for _, v := range vals {
@@ -270,14 +297,16 @@ func Repeat[V any](val V, n int) iter.Seq[V] {
 func Select[V, VOut any](seq iter.Seq[V], f func(V) VOut) iter.Seq[VOut] {
 	return func(yield func(VOut) bool) {
 		for v := range seq {
-			if !yield(f(v)) {
+			out := f(v)
+			if !yield(out) {
 				return
 			}
 		}
 	}
 }
 
-// SelectKeys projects each value in the sequence into a key-value pair using the given key selector function.
+// SelectKeys projects each value of a sequence into a key-value pair using a function to
+// select a key.
 func SelectKeys[K, V any](seq iter.Seq[V], f func(V) K) iter.Seq2[K, V] {
 	return func(yield func(K, V) bool) {
 		for v := range seq {
@@ -318,8 +347,7 @@ func SelectSlices[V, VOut any](seq iter.Seq[V], f func(V) []VOut) iter.Seq[VOut]
 }
 
 // Single returns the only value in a sequence.
-// A second return value indicates whether the result is valid,
-// (i.e., there was exactly one value in the sequence).
+// A second return value indicates whether there was exactly one value in the sequence.
 func Single[V any](seq iter.Seq[V]) (V, bool) {
 	var first V
 	var found bool
@@ -335,7 +363,28 @@ func Single[V any](seq iter.Seq[V]) (V, bool) {
 	return first, true
 }
 
-// Skip bypasses the given number of values in a sequence and returns the remaining values.
+// SingleFunc returns the only value in a sequence that satisfies a predicate.
+// A second return value indicates whether there was exactly one value in the
+// sequence that satisfied the predicate.
+func SingleFunc[V any](seq iter.Seq[V], f func(V) bool) (V, bool) {
+	var first V
+	var found bool
+
+	for v := range seq {
+		if f(v) {
+			if found {
+				var zero V
+				return zero, false
+			}
+			first = v
+			found = true
+		}
+	}
+
+	return first, found
+}
+
+// Skip bypasses a given number of values in a sequence and returns the remaining values.
 func Skip[V any](seq iter.Seq[V], n int) iter.Seq[V] {
 	return func(yield func(V) bool) {
 		i := 0
@@ -350,7 +399,7 @@ func Skip[V any](seq iter.Seq[V], n int) iter.Seq[V] {
 	}
 }
 
-// SkipWhile bypasses values in a sequence as long as the given condition is true and then
+// SkipWhile bypasses values in a sequence as long as a condition is true and then
 // returns the remaining values.
 func SkipWhile[V any](seq iter.Seq[V], f func(int, V) bool) iter.Seq[V] {
 	return func(yield func(V) bool) {
@@ -371,7 +420,7 @@ func SkipWhile[V any](seq iter.Seq[V], f func(int, V) bool) iter.Seq[V] {
 	}
 }
 
-// Sum computes the sum of the values in the sequence.
+// Sum computes the sum of the values in a sequence.
 func Sum[V constraints.Integer | constraints.Float](seq iter.Seq[V]) V {
 	var sum V
 	for v := range seq {
@@ -380,7 +429,7 @@ func Sum[V constraints.Integer | constraints.Float](seq iter.Seq[V]) V {
 	return sum
 }
 
-// Take returns the given number of values from the start of the sequence.
+// Take returns a given number of values from the start of a sequence.
 func Take[V any](seq iter.Seq[V], n int) iter.Seq[V] {
 	return func(yield func(V) bool) {
 		i := 0
@@ -396,7 +445,7 @@ func Take[V any](seq iter.Seq[V], n int) iter.Seq[V] {
 	}
 }
 
-// TakeWhile returns values from a sequence as long as the given condition is true
+// TakeWhile returns values from a sequence as long as a given condition is true
 // and then skips the remaining values.
 func TakeWhile[V any](seq iter.Seq[V], f func(int, V) bool) iter.Seq[V] {
 	return func(yield func(V) bool) {
@@ -414,7 +463,7 @@ func TakeWhile[V any](seq iter.Seq[V], f func(int, V) bool) iter.Seq[V] {
 	}
 }
 
-// Where filters a value sequence based on the given predicate.
+// Where filters a sequence based on a predicate.
 func Where[V any](seq iter.Seq[V], f func(V) bool) iter.Seq[V] {
 	return func(yield func(V) bool) {
 		for v := range seq {
@@ -427,11 +476,10 @@ func Where[V any](seq iter.Seq[V], f func(V) bool) iter.Seq[V] {
 	}
 }
 
-// ValueAt returns the value at the given index in the sequence.
-// A second return value indicates whether the result is valid,
-// (i.e., the index was within the bounds of the sequence).
+// ValueAt returns the value at a given index in a sequence.
 //
-// This will panic if the index is negative.
+// A second return value indicates whether there were enough values in the sequence.
+// This will panic if the given index is negative.
 func ValueAt[V any](seq iter.Seq[V], index int) (V, bool) {
 	if index < 0 {
 		panic("index must be non-negative")
@@ -445,24 +493,43 @@ func ValueAt[V any](seq iter.Seq[V], index int) (V, bool) {
 		i++
 	}
 
-	var v V
-	return v, false
+	var zero V
+	return zero, false
 }
 
-// Yield returns a sequence that yields the given values.
-// This is useful for creating an empty sequence or a sequence with a few values.
+// Yield returns a sequence of values.
+//
+// This is useful for creating a sequence from a slice or variadic arguments.
+// Providing no arguments creates an empty sequence.
 //
 // Examples:
 //
-//	// empty sequence, yields nothing
-//	empty := seq.Yield[int]()
+//	// yield each element of the slice
+//	// yields ("a"), ("b"), ("c")
+//	vals := seq.Yield([]string{"a", "b", "c"}...)
 //
 //	// yields (1), (2), (3)
 //	vals := seq.Yield(1, 2, 3)
+//
+//	// empty sequence yields no values
+//	empty := seq.Yield[int]()
 func Yield[V any](vals ...V) iter.Seq[V] {
 	return func(yield func(V) bool) {
 		for _, v := range vals {
 			if !yield(v) {
+				return
+			}
+		}
+	}
+}
+
+// YieldBackward returns a sequence of values in reverse order.
+//
+// See Yield for more information.
+func YieldBackward[V any](vals ...V) iter.Seq[V] {
+	return func(yield func(V) bool) {
+		for i := len(vals) - 1; i >= 0; i-- {
+			if !yield(vals[i]) {
 				return
 			}
 		}

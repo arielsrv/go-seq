@@ -17,7 +17,7 @@ func Concat2[K, V any](seqs ...iter.Seq2[K, V]) iter.Seq2[K, V] {
 	}
 }
 
-// ContainsKey returns true if the given key is present in the key-value sequence.
+// ContainsKey determines whether a key is present in a key-value sequence.
 func ContainsKey[K comparable, V any](seq iter.Seq2[K, V], key K) bool {
 	for k, _ := range seq {
 		if k == key {
@@ -28,6 +28,8 @@ func ContainsKey[K comparable, V any](seq iter.Seq2[K, V], key K) bool {
 }
 
 // DistinctKeys returns distinct key-value pairs from a sequence by comparing the keys.
+//
+// The first occurrence is yielded, and any subsequent occurrences are discarded.
 func DistinctKeys[K comparable, V any](seq iter.Seq2[K, V]) iter.Seq2[K, V] {
 	return func(yield func(K, V) bool) {
 		seen := make(map[K]struct{})
@@ -57,7 +59,8 @@ func Keys[K, V any](seq iter.Seq2[K, V]) iter.Seq[K] {
 func SelectValues[K, V, VOut any](seq iter.Seq2[K, V], f func(K, V) VOut) iter.Seq[VOut] {
 	return func(yield func(VOut) bool) {
 		for k, v := range seq {
-			if !yield(f(k, v)) {
+			out := f(k, v)
+			if !yield(out) {
 				return
 			}
 		}
@@ -88,12 +91,23 @@ func Values[K, V any](seq iter.Seq2[K, V]) iter.Seq[V] {
 	}
 }
 
-// Yield2 returns a key-value sequence that yields the given values and their indices.
+// Yield2 returns a sequence of indexes and values.
 //
-// Example:
+// This can be use to create a sequence from a slice or variadic arguments.
+// The index of the value is used as the key.
+// Providing no arguments creates an empty sequence.
+//
+// Examples:
+//
+//	// yield each element of the slice with its index
+//	// yields (0, "a"), (1, "b"), (2, "c")
+//	kvs := seq.Yield2([]string{"a", "b", "c"}...)
 //
 //	// yields (0, "a"), (1, "b"), (2, "c")
-//	seq := seq.Yield2("a", "b", "c")
+//	kvs := seq.Yield2("a", "b", "c")
+//
+//	// empty sequence yields no values
+//	empty := seq.Yield2[string]()
 func Yield2[V any](vals ...V) iter.Seq2[int, V] {
 	return func(yield func(int, V) bool) {
 		for i, v := range vals {
@@ -104,10 +118,44 @@ func Yield2[V any](vals ...V) iter.Seq2[int, V] {
 	}
 }
 
-// Zip returns a key-value sequence that combines values from two input sequences.
+// YieldBackward2 returns a sequence of indexes and values in reverse order.
 //
-// The resulting sequence will be as long as the shortest input sequence.
+// See Yield2 for more information.
+func YieldBackward2[V any](vals ...V) iter.Seq2[int, V] {
+	return func(yield func(int, V) bool) {
+		for i := len(vals) - 1; i >= 0; i-- {
+			if !yield(i, vals[i]) {
+				return
+			}
+		}
+	}
+}
+
+// YieldMap returns a key-value sequence that yields the key-value pairs from a map.
+//
+// The iteration order is not specified and is not guaranteed to be the same from one call to the next.
+func YieldMap[Map ~map[K]V, K comparable, V any](m Map) iter.Seq2[K, V] {
+	return func(yield func(K, V) bool) {
+		for k, v := range m {
+			if !yield(k, v) {
+				return
+			}
+		}
+	}
+}
+
+// Zip returns a key-value sequence that combines values from two value sequences.
+//
+// The resulting sequence will be as long as the shortest value sequence.
 // Any remaining values in the longer sequence are discarded.
+//
+// Example:
+//
+//	seqK := seq.Yield(1, 2, 3)
+//	seqV := seq.Yield("a", "b", "c", "d")
+//
+//	// yields (1, "a"), (2, "b"), (3, "c")
+//	kvs := seq.Zip(seqK, seqV)
 func Zip[K any, V any](seqK iter.Seq[K], seqV iter.Seq[V]) iter.Seq2[K, V] {
 	return func(yield func(K, V) bool) {
 		nextV, stop := iter.Pull(seqV)
