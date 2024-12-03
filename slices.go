@@ -15,12 +15,35 @@ func Collect[V any](seq iter.Seq[V]) []V {
 func Reversed[V any](seq iter.Seq[V]) []V {
 	s := slices.Collect(seq)
 	slices.Reverse(s)
+
 	return s
 }
 
 // Sorted collects values from a sequence into a new slice and then sorts it.
 func Sorted[V cmp.Ordered](seq iter.Seq[V]) []V {
 	return slices.Sorted(seq)
+}
+
+// SortedBy collects values from a sequence into a new slice and then uses a
+// function to get the key to use for sorting.
+func SortedBy[V any, K cmp.Ordered](seq iter.Seq[V], f func(V) K) []V {
+	s := slices.Collect(seq)
+
+	slices.SortFunc(s, func(a, b V) int {
+		return cmp.Compare(f(a), f(b))
+	})
+	return s
+}
+
+// SortedBy collects values from a sequence into a new slice and then uses a
+// function to get the key to use for sorting.
+func SortedByStable[V any, K cmp.Ordered](seq iter.Seq[V], f func(V) K) []V {
+	s := slices.Collect(seq)
+
+	slices.SortStableFunc(s, func(a, b V) int {
+		return cmp.Compare(f(a), f(b))
+	})
+	return s
 }
 
 // SortedFunc collects values from a sequence into a new slice and then sorts it using the
