@@ -163,6 +163,11 @@ func CountFunc[V any](seq iter.Seq[V], f func(V) bool) int {
 	return count
 }
 
+// Empty returns an empty sequence.
+func Empty[V any]() iter.Seq[V] {
+	return func(yield func(V) bool) {}
+}
+
 // Equal determines if two sequences are equal.
 func Equal[V comparable](seq1, seq2 iter.Seq[V]) bool {
 	nextV2, done := iter.Pull(seq2)
@@ -585,7 +590,6 @@ func ValueAt[V any](seq iter.Seq[V], index int) (V, bool) {
 // Yield returns a sequence of values.
 //
 // This is useful for creating a sequence from a slice or variadic arguments.
-// Providing no arguments creates an empty sequence.
 //
 // Examples:
 //
@@ -595,9 +599,6 @@ func ValueAt[V any](seq iter.Seq[V], index int) (V, bool) {
 //
 //	// yields (1), (2), (3)
 //	vals := seq.Yield(1, 2, 3)
-//
-//	// empty sequence yields no values
-//	empty := seq.Yield[int]()
 func Yield[V any](vals ...V) iter.Seq[V] {
 	return func(yield func(V) bool) {
 		for _, v := range vals {

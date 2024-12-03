@@ -27,6 +27,11 @@ func ContainsKey[K comparable, V any](seq iter.Seq2[K, V], key K) bool {
 	return false
 }
 
+// Empty2 returns an empty key-value sequence.
+func Empty2[K, V any]() iter.Seq2[K, V] {
+	return func(yield func(K, V) bool) {}
+}
+
 // Keys returns the keys from a key-value sequence.
 func Keys[K, V any](seq iter.Seq2[K, V]) iter.Seq[K] {
 	return func(yield func(K) bool) {
@@ -103,7 +108,6 @@ func Values[K, V any](seq iter.Seq2[K, V]) iter.Seq[V] {
 //
 // This can be use to create a sequence from a slice or variadic arguments.
 // The index of the value is used as the key.
-// Providing no arguments creates an empty sequence.
 //
 // Examples:
 //
@@ -113,9 +117,6 @@ func Values[K, V any](seq iter.Seq2[K, V]) iter.Seq[V] {
 //
 //	// yields (0, "a"), (1, "b"), (2, "c")
 //	kvs := seq.Yield2("a", "b", "c")
-//
-//	// empty sequence yields no values
-//	empty := seq.Yield2[string]()
 func Yield2[V any](vals ...V) iter.Seq2[int, V] {
 	return func(yield func(int, V) bool) {
 		for i, v := range vals {
