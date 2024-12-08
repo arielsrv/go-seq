@@ -65,9 +65,10 @@ func Append[V any](seq iter.Seq[V], vals ...V) iter.Seq[V] {
 }
 
 // Average computes the average of the values in a sequence.
-func Average[V constraints.Integer | constraints.Float](seq iter.Seq[V]) V {
+func Average[V constraints.Integer | constraints.Float](seq iter.Seq[V]) float64 {
 	var sum V
 	var count int
+
 	for v := range seq {
 		sum += v
 		count++
@@ -76,7 +77,7 @@ func Average[V constraints.Integer | constraints.Float](seq iter.Seq[V]) V {
 		return 0
 	}
 
-	return sum / V(count)
+	return float64(sum) / float64(count)
 }
 
 // Chunk splits the values of a sequence into chunks of a given size at most.
