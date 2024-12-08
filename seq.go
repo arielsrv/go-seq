@@ -233,6 +233,21 @@ func First[V any](seq iter.Seq[V]) (V, bool) {
 	return v, false
 }
 
+// FirstFunc returns the first value of a sequence that satisfies a predicate.
+//
+// A second return value indicates whether the sequence contained any value that satisfied the predicate.
+func FirstFunc[V any](seq iter.Seq[V], f func(V) bool) (V, bool) {
+	var v V
+	for v = range seq {
+		if f(v) {
+			return v, true
+		}
+	}
+
+	var zero V
+	return zero, false
+}
+
 // Last returns the last value of a sequence.
 //
 // A second return value indicates whether the sequence contained any values.
@@ -244,6 +259,22 @@ func Last[V any](seq iter.Seq[V]) (V, bool) {
 		found = true
 	}
 	return v, found
+}
+
+// LastFunc returns the last value of a sequence that satisfies a predicate.
+//
+// A second return value indicates whether the sequence contained any value that satisfied the predicate.
+func LastFunc[V any](seq iter.Seq[V], f func(V) bool) (V, bool) {
+	var last V
+	var found bool
+
+	for v := range seq {
+		if f(v) {
+			last = v
+			found = true
+		}
+	}
+	return last, found
 }
 
 // Max returns the maximum value in a sequence.
