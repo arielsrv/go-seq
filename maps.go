@@ -66,15 +66,16 @@ func Grouped[K comparable, V any](seq iter.Seq2[K, V]) map[K][]V {
 	return groups
 }
 
-// Join joins a map with a sequence of key-value pairs into a new sequence of key-value pairs.
-func Join[Map ~map[K]V1, K comparable, V1, V2, VOut any](
+// Join joins a sequence of key-value pairs with values from a map using the key and uses a
+// function to project the values to a new value.
+func Join[K comparable, V1 any, Map ~map[K]V2, V2 any, VOut any](
+	seq iter.Seq2[K, V1],
 	m Map,
-	seq iter.Seq2[K, V2],
 	f func(K, V1, V2) VOut,
 ) iter.Seq2[K, VOut] {
 	return func(yield func(K, VOut) bool) {
-		for k, v2 := range seq {
-			v1, ok := m[k]
+		for k, v1 := range seq {
+			v2, ok := m[k]
 			if !ok {
 				continue
 			}
