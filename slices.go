@@ -11,11 +11,45 @@ func Collect[V any](seq iter.Seq[V]) []V {
 	return slices.Collect(seq)
 }
 
+// CollectLast collects values from a sequence into a new slice,
+// keeping only the last n values.
+func CollectLast[V any](seq iter.Seq[V], n int) []V {
+	if n < 0 {
+		panic("n must be non-negative")
+	}
+	if n == 0 {
+		return nil
+	}
+
+	buf := make([]V, n)
+	i := 0
+
+	// fill a circular buffer
+	for v := range seq {
+		buf[i%n] = v
+		i++
+	}
+
+	switch {
+	case i == 0:
+		buf = nil
+	case i > n:
+		// rotate the buffer to the start of the final n values
+		i = i % n
+		copy(buf, append(buf[i:], buf[:i]...))
+	case i < n:
+		// return only the values that were filled
+		buf = buf[:i]
+	}
+
+	return buf
+}
+
 // Reversed collects values from a sequence into a new slice and then reverses it.
 func Reversed[V any](seq iter.Seq[V]) []V {
 	s := slices.Collect(seq)
-	slices.Reverse(s)
 
+	slices.Reverse(s)
 	return s
 }
 
