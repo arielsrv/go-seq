@@ -414,6 +414,7 @@ func Range[V constraints.Integer](start, end, step V) iter.Seq[V] {
 	}
 
 	return func(yield func(V) bool) {
+		// TODO: support descending ranges
 		for i := start; i <= end; i += step {
 			if !yield(i) {
 				return
