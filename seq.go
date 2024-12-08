@@ -285,7 +285,7 @@ func Max[V cmp.Ordered](seq iter.Seq[V]) (V, bool) {
 	var found bool
 
 	for v := range seq {
-		if v > max {
+		if !found || v > max {
 			max = v
 		}
 		found = true
@@ -303,7 +303,7 @@ func MaxBy[V any, C cmp.Ordered](seq iter.Seq[V], f func(V) C) (V, bool) {
 
 	for v := range seq {
 		c := f(v)
-		if c > maxC {
+		if !found || c > maxC {
 			maxC = c
 			maxVal = v
 		}
@@ -320,7 +320,7 @@ func MaxFunc[V any](seq iter.Seq[V], cmp func(V, V) int) (V, bool) {
 	var found bool
 
 	for v := range seq {
-		if cmp(v, max) > 0 {
+		if !found || cmp(v, max) > 0 {
 			max = v
 		}
 		found = true
@@ -334,8 +334,9 @@ func MaxFunc[V any](seq iter.Seq[V], cmp func(V, V) int) (V, bool) {
 func Min[V cmp.Ordered](seq iter.Seq[V]) (V, bool) {
 	var min V
 	var found bool
+
 	for v := range seq {
-		if v < min {
+		if !found || v < min {
 			min = v
 		}
 		found = true
@@ -351,7 +352,7 @@ func MinBy[V any, C cmp.Ordered](seq iter.Seq[V], f func(V) C) (V, bool) {
 
 	for v := range seq {
 		c := f(v)
-		if c < minC {
+		if !found || c < minC {
 			minC = c
 			minVal = v
 		}
@@ -366,8 +367,9 @@ func MinBy[V any, C cmp.Ordered](seq iter.Seq[V], f func(V) C) (V, bool) {
 func MinFunc[V any](seq iter.Seq[V], cmp func(V, V) int) (V, bool) {
 	var min V
 	var found bool
+
 	for v := range seq {
-		if cmp(v, min) < 0 {
+		if !found || cmp(v, min) < 0 {
 			min = v
 		}
 		found = true

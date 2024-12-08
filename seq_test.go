@@ -589,6 +589,12 @@ func TestMax(t *testing.T) {
 			ok:   true,
 		},
 		{
+			name: "single",
+			seq:  seq.Yield(-10),
+			want: -10,
+			ok:   true,
+		},
+		{
 			name: "empty sequence",
 			seq:  seq.Yield[int](),
 			want: 0,
