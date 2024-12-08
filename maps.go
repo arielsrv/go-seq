@@ -19,6 +19,7 @@ func AggregateGrouped[K comparable, V, A any](
 	f func(A, V) A,
 ) map[K]A {
 	groups := make(map[K]A)
+
 	for k, v := range seq {
 		acc, ok := groups[k]
 		if !ok {
@@ -32,8 +33,25 @@ func AggregateGrouped[K comparable, V, A any](
 // CountGrouped counts the number of occurrences of each key in a sequence of key-value pairs.
 func CountGrouped[K comparable, V any](seq iter.Seq2[K, V]) map[K]int {
 	groups := make(map[K]int)
+
 	for k := range seq {
 		groups[k]++
+	}
+	return groups
+}
+
+// CountFuncGrouped counts the number of occurrences of each key in a sequence of key-value pairs
+// based on a predicate.
+func CountFuncGrouped[K comparable, V any](
+	seq iter.Seq2[K, V],
+	f func(K, V) bool,
+) map[K]int {
+	groups := make(map[K]int)
+
+	for k, v := range seq {
+		if f(k, v) {
+			groups[k]++
+		}
 	}
 	return groups
 }
