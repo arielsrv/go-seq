@@ -22,10 +22,22 @@ func TestCollectLast(t *testing.T) {
 			want: []int{3, 4, 5},
 		},
 		{
-			name: "n 0",
+			name: "n*2 < len",
+			seq:  seq.Yield(1, 2, 3, 4, 5, 6, 7, 8),
+			n:    3,
+			want: []int{6, 7, 8},
+		},
+		{
+			name: "n = 0",
 			seq:  seq.Yield(1, 2, 3, 4, 5),
 			n:    0,
 			want: nil,
+		},
+		{
+			name: "n = 1",
+			seq:  seq.Yield(1, 2, 3, 4, 5),
+			n:    1,
+			want: []int{5},
 		},
 		{
 			name: "n > len",
