@@ -80,23 +80,31 @@ func Average[V constraints.Integer | constraints.Float](seq iter.Seq[V]) float64
 	return float64(sum) / float64(count)
 }
 
-// Chunk splits the values of a sequence into chunks of a given size at most.
+// Chunk splits the values of a sequence into slices of a given size at most.
 func Chunk[V any](seq iter.Seq[V], size int) iter.Seq[[]V] {
 	return func(yield func([]V) bool) {
-		chunk := make([]V, 0, size)
+		var chunk []V
+
 		for v := range seq {
+			if chunk == nil {
+				// Lazily allocate an array for the chunk
+				chunk = make([]V, 0, size)
+			}
+
 			chunk = append(chunk, v)
 			if len(chunk) == size {
 				if !yield(chunk) {
 					return
 				}
-				chunk = make([]V, 0, size)
+
+				// Reset the chunk; a new one will be allocated if there are more values
+				chunk = nil
 			}
 		}
+
+		// Make sure to return a partial chunk
 		if len(chunk) > 0 {
-			if !yield(chunk) {
-				return
-			}
+			yield(chunk)
 		}
 	}
 }
