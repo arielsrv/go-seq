@@ -13,6 +13,7 @@ func Aggregate[V, A any](seq iter.Seq[V], init A, f func(A, V) A) A {
 	for v := range seq {
 		acc = f(acc, v)
 	}
+
 	return acc
 }
 
@@ -25,6 +26,7 @@ func All[V any](seq iter.Seq[V], f func(V) bool) bool {
 			return false
 		}
 	}
+
 	return true
 }
 
@@ -33,6 +35,7 @@ func Any[V any](seq iter.Seq[V]) bool {
 	for range seq {
 		return true
 	}
+
 	return false
 }
 
@@ -45,6 +48,7 @@ func AnyFunc[V any](seq iter.Seq[V], f func(V) bool) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -56,6 +60,7 @@ func Append[V any](seq iter.Seq[V], vals ...V) iter.Seq[V] {
 				return
 			}
 		}
+
 		for _, v := range vals {
 			if !yield(v) {
 				return
@@ -73,6 +78,7 @@ func Average[V constraints.Integer | constraints.Float](seq iter.Seq[V]) float64
 		sum += v
 		count++
 	}
+
 	if count == 0 {
 		return 0
 	}
@@ -129,16 +135,18 @@ func Contains[V comparable](seq iter.Seq[V], val V) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
 // ContainsFunc determines if a sequence contains a value using a comparison function.
-func ContainsFunc[V any](seq iter.Seq[V], val V, cmp func(V, V) bool) bool {
+func ContainsFunc[V any](seq iter.Seq[V], val V, f func(V, V) bool) bool {
 	for v := range seq {
-		if cmp(v, val) {
+		if f(v, val) {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -152,6 +160,7 @@ func Count[V any](seq iter.Seq[V]) int {
 	for range seq {
 		count++
 	}
+
 	return count
 }
 
@@ -164,17 +173,19 @@ func Count[V any](seq iter.Seq[V]) int {
 // satisfies a predicate.
 func CountFunc[V any](seq iter.Seq[V], f func(V) bool) int {
 	count := 0
+
 	for v := range seq {
 		if f(v) {
 			count++
 		}
 	}
+
 	return count
 }
 
 // Empty returns an empty sequence.
 func Empty[V any]() iter.Seq[V] {
-	return func(yield func(V) bool) {}
+	return func(func(V) bool) {}
 }
 
 // Equal determines if two sequences are equal.
@@ -188,6 +199,7 @@ func Equal[V comparable](seq1, seq2 iter.Seq[V]) bool {
 			// seq2 has fewer values
 			return false
 		}
+
 		if v1 != v2 {
 			// check if each value is equal
 			return false
@@ -196,11 +208,12 @@ func Equal[V comparable](seq1, seq2 iter.Seq[V]) bool {
 
 	// not equal if seq2 has more values
 	_, more := nextV2()
+
 	return !more
 }
 
 // EqualFunc determines if two sequences are equal using a function to compare values.
-func EqualFunc[V any](seq1, seq2 iter.Seq[V], cmp func(V, V) bool) bool {
+func EqualFunc[V any](seq1, seq2 iter.Seq[V], f func(V, V) bool) bool {
 	nextV2, done := iter.Pull(seq2)
 	defer done()
 
@@ -210,7 +223,8 @@ func EqualFunc[V any](seq1, seq2 iter.Seq[V], cmp func(V, V) bool) bool {
 			// seq2 has fewer values
 			return false
 		}
-		if !cmp(v1, v2) {
+
+		if !f(v1, v2) {
 			// check if each value is equal
 			return false
 		}
@@ -218,6 +232,7 @@ func EqualFunc[V any](seq1, seq2 iter.Seq[V], cmp func(V, V) bool) bool {
 
 	// not equal if seq2 has more values
 	_, more := nextV2()
+
 	return !more
 }
 
@@ -244,8 +259,7 @@ func FirstFunc[V any](seq iter.Seq[V], f func(V) bool) (V, bool) {
 		}
 	}
 
-	var zero V
-	return zero, false
+	return v, false
 }
 
 // Last returns the last value of a sequence.
@@ -258,6 +272,7 @@ func Last[V any](seq iter.Seq[V]) (V, bool) {
 	for v = range seq {
 		found = true
 	}
+
 	return v, found
 }
 
@@ -274,6 +289,7 @@ func LastFunc[V any](seq iter.Seq[V], f func(V) bool) (V, bool) {
 			found = true
 		}
 	}
+
 	return last, found
 }
 
@@ -281,16 +297,18 @@ func LastFunc[V any](seq iter.Seq[V], f func(V) bool) (V, bool) {
 //
 // A second return value indicates whether the sequence contained any values.
 func Max[V cmp.Ordered](seq iter.Seq[V]) (V, bool) {
-	var max V
+	var maxVal V
 	var found bool
 
 	for v := range seq {
-		if !found || v > max {
-			max = v
+		if !found || v > maxVal {
+			maxVal = v
 		}
+
 		found = true
 	}
-	return max, found
+
+	return maxVal, found
 }
 
 // MaxBy returns the maximum value in a sequence using a function to select a comparable value.
@@ -307,41 +325,47 @@ func MaxBy[V any, C cmp.Ordered](seq iter.Seq[V], f func(V) C) (V, bool) {
 			maxC = c
 			maxVal = v
 		}
+
 		found = true
 	}
+
 	return maxVal, found
 }
 
 // MaxFunc returns the maximum value in a sequence using a comparison function.
 //
 // A second return value indicates whether the sequence contained any values.
-func MaxFunc[V any](seq iter.Seq[V], cmp func(V, V) int) (V, bool) {
-	var max V
+func MaxFunc[V any](seq iter.Seq[V], f func(V, V) int) (V, bool) {
+	var maxVal V
 	var found bool
 
 	for v := range seq {
-		if !found || cmp(v, max) > 0 {
-			max = v
+		if !found || f(v, maxVal) > 0 {
+			maxVal = v
 		}
+
 		found = true
 	}
-	return max, found
+
+	return maxVal, found
 }
 
 // Min returns the minimum value in a sequence.
 //
 // A second return value indicates whether the sequence contained any values.
 func Min[V cmp.Ordered](seq iter.Seq[V]) (V, bool) {
-	var min V
+	var minVal V
 	var found bool
 
 	for v := range seq {
-		if !found || v < min {
-			min = v
+		if !found || v < minVal {
+			minVal = v
 		}
+
 		found = true
 	}
-	return min, found
+
+	return minVal, found
 }
 
 // MinBy returns the minimum value in a sequence using a function to select a comparable value.
@@ -356,25 +380,29 @@ func MinBy[V any, C cmp.Ordered](seq iter.Seq[V], f func(V) C) (V, bool) {
 			minC = c
 			minVal = v
 		}
+
 		found = true
 	}
+
 	return minVal, found
 }
 
 // MinFunc returns the minimum value in a sequence using a comparison function.
 //
 // A second return value indicates whether the sequence contained any values.
-func MinFunc[V any](seq iter.Seq[V], cmp func(V, V) int) (V, bool) {
-	var min V
+func MinFunc[V any](seq iter.Seq[V], f func(V, V) int) (V, bool) {
+	var minVal V
 	var found bool
 
 	for v := range seq {
-		if !found || cmp(v, min) < 0 {
-			min = v
+		if !found || f(v, minVal) < 0 {
+			minVal = v
 		}
+
 		found = true
 	}
-	return min, found
+
+	return minVal, found
 }
 
 // OfType filters a sequence based on a type.
@@ -399,6 +427,7 @@ func Prepend[V any](seq iter.Seq[V], vals ...V) iter.Seq[V] {
 				return
 			}
 		}
+
 		for v := range seq {
 			if !yield(v) {
 				return
@@ -425,12 +454,8 @@ func Range[V constraints.Integer](start, end, step V) iter.Seq[V] {
 
 // Repeat returns a sequence that yields the given value the given number of times.
 func Repeat[V any](val V, n int) iter.Seq[V] {
-	if n < 0 {
-		panic("count must be non-negative")
-	}
-
 	return func(yield func(V) bool) {
-		for i := 0; i < n; i++ {
+		for range n {
 			if !yield(val) {
 				return
 			}
@@ -488,6 +513,7 @@ func Single[V any](seq iter.Seq[V]) (V, bool) {
 			var zero V
 			return zero, false
 		}
+
 		first = v
 		found = true
 	}
@@ -509,6 +535,7 @@ func SingleFunc[V any](seq iter.Seq[V], f func(V) bool) (V, bool) {
 				var zero V
 				return zero, false
 			}
+
 			first = v
 			found = true
 		}
@@ -527,6 +554,7 @@ func Skip[V any](seq iter.Seq[V], n int) iter.Seq[V] {
 					return
 				}
 			}
+
 			i++
 		}
 	}
@@ -538,16 +566,20 @@ func SkipWhile[V any](seq iter.Seq[V], f func(int, V) bool) iter.Seq[V] {
 	return func(yield func(V) bool) {
 		skip := true
 		i := 0
+
 		for v := range seq {
 			if skip {
 				if f(i, v) {
 					continue
 				}
+
 				skip = false
 			}
+
 			if !yield(v) {
 				return
 			}
+
 			i++
 		}
 	}
@@ -559,6 +591,7 @@ func Sum[V constraints.Integer | constraints.Float](seq iter.Seq[V]) V {
 	for v := range seq {
 		sum += v
 	}
+
 	return sum
 }
 
@@ -570,9 +603,11 @@ func Take[V any](seq iter.Seq[V], n int) iter.Seq[V] {
 			if i >= n {
 				return
 			}
+
 			if !yield(v) {
 				return
 			}
+
 			i++
 		}
 	}
@@ -584,13 +619,14 @@ func TakeWhile[V any](seq iter.Seq[V], f func(int, V) bool) iter.Seq[V] {
 	return func(yield func(V) bool) {
 		i := 0
 		for v := range seq {
-			if f(i, v) {
-				if !yield(v) {
-					return
-				}
-			} else {
+			if !f(i, v) {
 				return
 			}
+
+			if !yield(v) {
+				return
+			}
+
 			i++
 		}
 	}
@@ -618,15 +654,17 @@ func ValueAt[V any](seq iter.Seq[V], index int) (V, bool) {
 		panic("index must be non-negative")
 	}
 
+	var zero V
+
 	i := 0
 	for v := range seq {
 		if i == index {
 			return v, true
 		}
+
 		i++
 	}
 
-	var zero V
 	return zero, false
 }
 

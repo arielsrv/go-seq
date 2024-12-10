@@ -1,0 +1,43 @@
+linters:
+
+  enable:
+    - asasalint
+    - asciicheck
+    - bidichk
+    - copyloopvar
+    - dupl
+    - dupword
+    - errcheck
+    - exhaustive
+    - gci
+    - gocritic
+    - godot
+    - gofmt
+    - gosec
+    - govet
+    - ineffassign
+    - intrange
+    - lll
+    - misspell
+    - nonamedreturns
+    - revive
+    - testifylint
+    - testpackage
+    - thelper
+    - tparallel
+    - whitespace
+    - wsl
+
+linters-settings:
+  govet:
+    enable-all: true
+    disable:
+      - fieldalignment
+  revive:
+    rules:
+      - name: early-return
+        disabled: false
+      - name: import-shadowing
+        disabled: false
+  wsl:
+    allow-cuddle-declarations: true

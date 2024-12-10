@@ -25,8 +25,10 @@ func AggregateGrouped[K comparable, V, A any](
 		if !ok {
 			acc = initFunc(k)
 		}
+
 		groups[k] = f(acc, v)
 	}
+
 	return groups
 }
 
@@ -37,6 +39,7 @@ func CountGrouped[K comparable, V any](seq iter.Seq2[K, V]) map[K]int {
 	for k := range seq {
 		groups[k]++
 	}
+
 	return groups
 }
 
@@ -53,6 +56,7 @@ func CountFuncGrouped[K comparable, V any](
 			groups[k]++
 		}
 	}
+
 	return groups
 }
 
@@ -60,9 +64,11 @@ func CountFuncGrouped[K comparable, V any](
 // into slices.
 func Grouped[K comparable, V any](seq iter.Seq2[K, V]) map[K][]V {
 	groups := make(map[K][]V)
+
 	for k, v := range seq {
 		groups[k] = append(groups[k], v)
 	}
+
 	return groups
 }
 
@@ -79,6 +85,7 @@ func Join[K comparable, V1 any, Map ~map[K]V2, V2 any, VOut any](
 			if !ok {
 				continue
 			}
+
 			out := f(k, v1, v2)
 			if !yield(k, out) {
 				return

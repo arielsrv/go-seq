@@ -13,7 +13,9 @@ func (s Set[V]) Add(v V) bool {
 	if _, ok := s[v]; ok {
 		return false
 	}
+
 	s[v] = struct{}{}
+
 	return true
 }
 
@@ -23,7 +25,9 @@ func (s Set[V]) Remove(v V) bool {
 	if _, ok := s[v]; !ok {
 		return false
 	}
+
 	delete(s, v)
+
 	return true
 }
 
@@ -50,6 +54,7 @@ func CollectSet[V comparable](seq iter.Seq[V]) Set[V] {
 	for v := range seq {
 		set[v] = struct{}{}
 	}
+
 	return set
 }
 
@@ -59,6 +64,7 @@ func NewSet[V comparable](vals ...V) Set[V] {
 	for _, v := range vals {
 		set[v] = struct{}{}
 	}
+
 	return set
 }
 

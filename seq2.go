@@ -19,17 +19,18 @@ func Concat2[K, V any](seqs ...iter.Seq2[K, V]) iter.Seq2[K, V] {
 
 // ContainsKey determines whether a key is present in a key-value sequence.
 func ContainsKey[K comparable, V any](seq iter.Seq2[K, V], key K) bool {
-	for k, _ := range seq {
+	for k := range seq {
 		if k == key {
 			return true
 		}
 	}
+
 	return false
 }
 
 // Empty2 returns an empty key-value sequence.
 func Empty2[K, V any]() iter.Seq2[K, V] {
-	return func(yield func(K, V) bool) {}
+	return func(_ func(K, V) bool) {}
 }
 
 // Keys returns the keys from a key-value sequence.
@@ -89,6 +90,7 @@ func WithIndex[V any](seq iter.Seq[V]) iter.Seq2[int, V] {
 			if !yield(i, v) {
 				return
 			}
+
 			i++
 		}
 	}
@@ -177,6 +179,7 @@ func Zip[K, V any](keys iter.Seq[K], vals iter.Seq[V]) iter.Seq2[K, V] {
 			if !ok {
 				return
 			}
+
 			if !yield(k, v) {
 				return
 			}

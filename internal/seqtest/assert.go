@@ -1,10 +1,9 @@
 package seqtest
 
 import (
+	"iter"
 	"slices"
 	"testing"
-
-	"iter"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -26,6 +25,7 @@ type KeyValuePair[K, V any] struct {
 func AssertEqual2[K, V any](t *testing.T, expected []KeyValuePair[K, V], seq iter.Seq2[K, V]) {
 	t.Helper()
 
+	//nolint:prealloc // We don't know the length of the sequence.
 	var actual []KeyValuePair[K, V]
 	for k, v := range seq {
 		actual = append(actual, KeyValuePair[K, V]{k, v})
