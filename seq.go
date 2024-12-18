@@ -688,10 +688,10 @@ func Yield[V any](vals ...V) iter.Seq[V] {
 	}
 }
 
-// YieldBackward returns a sequence of values in reverse order.
+// YieldBackwards returns a sequence of values in reverse order.
 //
 // See Yield for more information.
-func YieldBackward[V any](vals ...V) iter.Seq[V] {
+func YieldBackwards[V any](vals ...V) iter.Seq[V] {
 	return func(yield func(V) bool) {
 		for i := len(vals) - 1; i >= 0; i-- {
 			if !yield(vals[i]) {
