@@ -72,22 +72,61 @@ func Grouped[K comparable, V any](seq iter.Seq2[K, V]) map[K][]V {
 	return groups
 }
 
-// Join joins a sequence of key-value pairs with values from a map using the key and uses a
-// function to project the values to a new value.
-func Join[K comparable, V1 any, Map ~map[K]V2, V2 any, VOut any](
-	seq iter.Seq2[K, V1],
+// Join joins a sequence with values from a map using a function to select the key and a function
+// to project the values to a new value.
+//
+// The resulting sequence will only contain values where the key exists in the map.
+//
+// Example:
+//
+//	 var posts iter.Seq[*post.Post]
+//	 var users map[user.UserID]*user.User
+//
+//	 postUsers := seq.Join(posts, users,
+//		func(p *post.Post) user.UserID { return p.UserID },
+//		func(p *post.Post, u *user.User) *post.PostUser { return post.NewPostUser(p, u) },
+//	 )
+func Join[V1 any, K comparable, Map ~map[K]V2, V2 any, VOut any](
+	seq iter.Seq[V1],
 	m Map,
-	f func(K, V1, V2) VOut,
-) iter.Seq2[K, VOut] {
-	return func(yield func(K, VOut) bool) {
-		for k, v1 := range seq {
+	selectKey func(V1) K,
+	f func(V1, V2) VOut,
+) iter.Seq[VOut] {
+	return func(yield func(VOut) bool) {
+		for v1 := range seq {
+			k := selectKey(v1)
 			v2, ok := m[k]
+
 			if !ok {
 				continue
 			}
 
-			out := f(k, v1, v2)
-			if !yield(k, out) {
+			out := f(v1, v2)
+			if !yield(out) {
+				return
+			}
+		}
+	}
+}
+
+// OuterJoin joins a sequence with values from a map using a function to select the key and a function
+// to project the values to a new value.
+//
+// The resulting sequence will contain all values from the sequence. A boolean flag is provided to
+// indicate if the key was found in the map.
+func OuterJoin[V1 any, K comparable, Map ~map[K]V2, V2 any, VOut any](
+	seq iter.Seq[V1],
+	m Map,
+	selectKey func(V1) K,
+	f func(V1, V2, bool) VOut,
+) iter.Seq[VOut] {
+	return func(yield func(VOut) bool) {
+		for v1 := range seq {
+			k := selectKey(v1)
+			v2, ok := m[k]
+			out := f(v1, v2, ok)
+
+			if !yield(out) {
 				return
 			}
 		}
