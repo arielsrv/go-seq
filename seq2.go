@@ -107,46 +107,10 @@ func Values[K, V any](seq iter.Seq2[K, V]) iter.Seq[V] {
 	}
 }
 
-// Yield2 returns a sequence of indexes and values.
-//
-// This can be use to create a sequence from a slice or variadic arguments.
-// The index of the value is used as the key.
-//
-// Examples:
-//
-//	// yield each element of the slice with its index
-//	// yields (0, "a"), (1, "b"), (2, "c")
-//	kvs := seq.Yield2([]string{"a", "b", "c"}...)
-//
-//	// yields (0, "a"), (1, "b"), (2, "c")
-//	kvs := seq.Yield2("a", "b", "c")
-func Yield2[V any](vals ...V) iter.Seq2[int, V] {
-	return func(yield func(int, V) bool) {
-		for i, v := range vals {
-			if !yield(i, v) {
-				return
-			}
-		}
-	}
-}
-
-// Yield2Backward returns a sequence of indexes and values in reverse order.
-//
-// See Yield2 for more information.
-func Yield2Backward[V any](vals ...V) iter.Seq2[int, V] {
-	return func(yield func(int, V) bool) {
-		for i := len(vals) - 1; i >= 0; i-- {
-			if !yield(i, vals[i]) {
-				return
-			}
-		}
-	}
-}
-
-// YieldMap returns a key-value sequence that yields the key-value pairs from a map.
+// YieldKeyValues returns a sequence that yields the key-value pairs from a map.
 //
 // The iteration order is not specified and is not guaranteed to be the same from one call to the next.
-func YieldMap[Map ~map[K]V, K comparable, V any](m Map) iter.Seq2[K, V] {
+func YieldKeyValues[Map ~map[K]V, K comparable, V any](m Map) iter.Seq2[K, V] {
 	return func(yield func(K, V) bool) {
 		for k, v := range m {
 			if !yield(k, v) {
