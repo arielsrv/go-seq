@@ -126,41 +126,6 @@ func TestAny(t *testing.T) {
 	}
 }
 
-func TestAnyFunc(t *testing.T) {
-	tests := []struct {
-		name string
-		seq  iter.Seq[int]
-		f    func(int) bool
-		want bool
-	}{
-		{
-			name: "found",
-			seq:  seq.Yield(1, 2, 3),
-			f:    isEven,
-			want: true,
-		},
-		{
-			name: "none",
-			seq:  seq.Yield(1, 3, 5),
-			f:    isEven,
-			want: false,
-		},
-		{
-			name: "empty",
-			seq:  seq.Yield[int](),
-			f:    isEven,
-			want: false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := seq.AnyFunc(tt.seq, tt.f)
-			assert.Equal(t, tt.want, got)
-		})
-	}
-}
-
 func TestAppend(t *testing.T) {
 	tests := []struct {
 		name string
@@ -320,6 +285,41 @@ func TestContains(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := seq.Contains(tt.seq, tt.val)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestContainsFunc(t *testing.T) {
+	tests := []struct {
+		name string
+		seq  iter.Seq[int]
+		f    func(int) bool
+		want bool
+	}{
+		{
+			name: "found",
+			seq:  seq.Yield(1, 2, 3),
+			f:    isEven,
+			want: true,
+		},
+		{
+			name: "none",
+			seq:  seq.Yield(1, 3, 5),
+			f:    isEven,
+			want: false,
+		},
+		{
+			name: "empty",
+			seq:  seq.Yield[int](),
+			f:    isEven,
+			want: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := seq.ContainsFunc(tt.seq, tt.f)
 			assert.Equal(t, tt.want, got)
 		})
 	}

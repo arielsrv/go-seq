@@ -39,19 +39,6 @@ func Any[V any](seq iter.Seq[V]) bool {
 	return false
 }
 
-// AnyFunc determines if any values of a sequence satisfy a condition.
-//
-// This will return false if the sequence was empty.
-func AnyFunc[V any](seq iter.Seq[V], f func(V) bool) bool {
-	for v := range seq {
-		if f(v) {
-			return true
-		}
-	}
-
-	return false
-}
-
 // Append adds values to the end of a sequence.
 func Append[V any](seq iter.Seq[V], vals ...V) iter.Seq[V] {
 	return func(yield func(V) bool) {
@@ -139,10 +126,10 @@ func Contains[V comparable](seq iter.Seq[V], val V) bool {
 	return false
 }
 
-// ContainsFunc determines if a sequence contains a value using a comparison function.
-func ContainsFunc[V any](seq iter.Seq[V], val V, f func(V, V) bool) bool {
+// ContainsFunc determines if a sequence contains a value that satisfies a predicate.
+func ContainsFunc[V any](seq iter.Seq[V], f func(V) bool) bool {
 	for v := range seq {
-		if f(v, val) {
+		if f(v) {
 			return true
 		}
 	}
