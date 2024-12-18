@@ -423,14 +423,25 @@ func Prepend[V any](seq iter.Seq[V], vals ...V) iter.Seq[V] {
 	}
 }
 
-// Range returns a sequence of integers from start to end (inclusive) with the given step size.
-func Range[V constraints.Integer](start, end, step V) iter.Seq[V] {
+// Range returns a sequence of numbers from start to end (inclusive) with the given step size.
+func Range[V constraints.Integer | constraints.Float](start, end, step V) iter.Seq[V] {
 	if step < 1 {
 		panic("step must be positive")
 	}
 
+	if end < start {
+		// Descending
+		return func(yield func(V) bool) {
+			for i := start; i >= end; i -= step {
+				if !yield(i) {
+					return
+				}
+			}
+		}
+	}
+
+	// Ascending
 	return func(yield func(V) bool) {
-		// TODO: support descending ranges
 		for i := start; i <= end; i += step {
 			if !yield(i) {
 				return

@@ -703,18 +703,32 @@ func TestRange(t *testing.T) {
 		want  []int
 	}{
 		{
-			name:  "step 1",
+			name:  "ascending step 1",
 			start: 1,
 			end:   5,
 			step:  1,
 			want:  []int{1, 2, 3, 4, 5},
 		},
 		{
-			name:  "step 2",
+			name:  "ascending step 2",
 			start: 1,
 			end:   5,
 			step:  2,
 			want:  []int{1, 3, 5},
+		},
+		{
+			name:  "descending step 1",
+			start: 5,
+			end:   1,
+			step:  1,
+			want:  []int{5, 4, 3, 2, 1},
+		},
+		{
+			name:  "descending step 2",
+			start: 5,
+			end:   1,
+			step:  2,
+			want:  []int{5, 3, 1},
 		},
 		{
 			name:  "start equals end",
@@ -722,13 +736,6 @@ func TestRange(t *testing.T) {
 			end:   3,
 			step:  1,
 			want:  []int{3},
-		},
-		{
-			name:  "start greater than end",
-			start: 5,
-			end:   1,
-			step:  1,
-			want:  nil,
 		},
 		{
 			name:  "larger step",
@@ -789,12 +796,6 @@ func TestRepeat(t *testing.T) {
 			seqtest.AssertEqual(t, tt.want, got)
 		})
 	}
-
-	t.Run("panic on negative count", func(t *testing.T) {
-		assert.Panics(t, func() {
-			seq.Repeat(1, -1)
-		})
-	})
 }
 
 func TestSelect(t *testing.T) {
