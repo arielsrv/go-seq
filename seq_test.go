@@ -924,3 +924,97 @@ func TestSelectMany(t *testing.T) {
 		})
 	}
 }
+
+func TestSkip(t *testing.T) {
+	tests := []struct {
+		name string
+		seq  iter.Seq[int]
+		n    int
+		want []int
+	}{
+		{
+			name: "skip some",
+			seq:  seq.Yield(1, 2, 3, 4, 5),
+			n:    2,
+			want: []int{3, 4, 5},
+		},
+		{
+			name: "skip none",
+			seq:  seq.Yield(1, 2, 3),
+			n:    0,
+			want: []int{1, 2, 3},
+		},
+		{
+			name: "skip all",
+			seq:  seq.Yield(1, 2, 3),
+			n:    3,
+			want: nil,
+		},
+		{
+			name: "skip more than length",
+			seq:  seq.Yield(1, 2, 3),
+			n:    5,
+			want: nil,
+		},
+		{
+			name: "empty sequence",
+			seq:  seq.Yield[int](),
+			n:    2,
+			want: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := seq.Skip(tt.seq, tt.n)
+			seqtest.AssertEqual(t, tt.want, got)
+		})
+	}
+}
+
+func TestTake(t *testing.T) {
+	tests := []struct {
+		name string
+		seq  iter.Seq[int]
+		n    int
+		want []int
+	}{
+		{
+			name: "take some",
+			seq:  seq.Yield(1, 2, 3, 4, 5),
+			n:    3,
+			want: []int{1, 2, 3},
+		},
+		{
+			name: "take none",
+			seq:  seq.Yield(1, 2, 3),
+			n:    0,
+			want: nil,
+		},
+		{
+			name: "take all",
+			seq:  seq.Yield(1, 2, 3),
+			n:    3,
+			want: []int{1, 2, 3},
+		},
+		{
+			name: "take more than length",
+			seq:  seq.Yield(1, 2, 3),
+			n:    5,
+			want: []int{1, 2, 3},
+		},
+		{
+			name: "empty",
+			seq:  seq.Yield[int](),
+			n:    2,
+			want: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := seq.Take(tt.seq, tt.n)
+			seqtest.AssertEqual(t, tt.want, got)
+		})
+	}
+}
