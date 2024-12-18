@@ -19,7 +19,7 @@ func Aggregate[V, A any](seq iter.Seq[V], init A, f func(A, V) A) A {
 
 // All determines if all values of a sequence satisfy a condition.
 //
-// This will return true if the sequence was empty.
+// This returns true if the sequence was empty.
 func All[V any](seq iter.Seq[V], f func(V) bool) bool {
 	for v := range seq {
 		if !f(v) {
@@ -139,7 +139,7 @@ func ContainsFunc[V any](seq iter.Seq[V], f func(V) bool) bool {
 
 // Count returns the number of values in a sequence.
 //
-// This will iterate over the entire sequence to count the values.
+// This iterates over the entire sequence to count the values.
 // Use [Any] instead if you only need to check whether the sequence has any values.
 // Use [Single] instead if you only need to check whether the sequence has exactly one value.
 func Count[V any](seq iter.Seq[V]) int {
@@ -153,7 +153,7 @@ func Count[V any](seq iter.Seq[V]) int {
 
 // CountFunc returns the number of values in a sequence that satisfy a predicate.
 //
-// This will iterate over the entire sequence to count the values.
+// This iterates over the entire sequence to count the values.
 // Use [AnyFunc] instead if you only need to check whether the sequence has any values that satisfy
 // a predicate.
 // Use [SingleFunc] instead if you only need to check whether the sequence has exactly one value that
@@ -298,18 +298,18 @@ func Max[V cmp.Ordered](seq iter.Seq[V]) (V, bool) {
 	return maxVal, found
 }
 
-// MaxBy returns the maximum value in a sequence using a function to select a comparable value.
+// MaxBy returns the maximum value in a sequence using a function to select a key to use for comparisons.
 //
 // A second return value indicates whether the sequence contained any values.
-func MaxBy[V any, C cmp.Ordered](seq iter.Seq[V], f func(V) C) (V, bool) {
-	var maxC C
+func MaxBy[V any, K cmp.Ordered](seq iter.Seq[V], f func(V) K) (V, bool) {
+	var maxK K
 	var maxVal V
 	var found bool
 
 	for v := range seq {
-		c := f(v)
-		if !found || c > maxC {
-			maxC = c
+		k := f(v)
+		if !found || k > maxK {
+			maxK = k
 			maxVal = v
 		}
 
@@ -355,16 +355,16 @@ func Min[V cmp.Ordered](seq iter.Seq[V]) (V, bool) {
 	return minVal, found
 }
 
-// MinBy returns the minimum value in a sequence using a function to select a comparable value.
-func MinBy[V any, C cmp.Ordered](seq iter.Seq[V], f func(V) C) (V, bool) {
-	var minC C
+// MinBy returns the minimum value in a sequence using a function to select a key to use for comparisons.
+func MinBy[V any, K cmp.Ordered](seq iter.Seq[V], f func(V) K) (V, bool) {
+	var minK K
 	var minVal V
 	var found bool
 
 	for v := range seq {
-		c := f(v)
-		if !found || c < minC {
-			minC = c
+		k := f(v)
+		if !found || k < minK {
+			minK = k
 			minVal = v
 		}
 
@@ -396,8 +396,8 @@ func MinFunc[V any](seq iter.Seq[V], f func(V, V) int) (V, bool) {
 func OfType[V, VOut any](seq iter.Seq[V]) iter.Seq[VOut] {
 	return func(yield func(VOut) bool) {
 		for v := range seq {
-			var a any = v
-			if out, ok := a.(VOut); ok {
+			var anyVal any = v
+			if out, ok := anyVal.(VOut); ok {
 				if !yield(out) {
 					return
 				}
@@ -450,7 +450,7 @@ func Range[V constraints.Integer | constraints.Float](start, end, step V) iter.S
 	}
 }
 
-// Repeat returns a sequence that yields the given value the given number of times.
+// Repeat returns a sequence that yields a given value n numer of times.
 func Repeat[V any](val V, n int) iter.Seq[V] {
 	return func(yield func(V) bool) {
 		for range n {
@@ -646,7 +646,7 @@ func Where[V any](seq iter.Seq[V], f func(V) bool) iter.Seq[V] {
 // ValueAt returns the value at a given index in a sequence.
 //
 // A second return value indicates whether the given index was within the bounds of the sequence.
-// This will panic if the given index is negative.
+// This panics if the given index is negative.
 func ValueAt[V any](seq iter.Seq[V], index int) (V, bool) {
 	if index < 0 {
 		panic("index must be non-negative")
@@ -674,7 +674,8 @@ func ValueAt[V any](seq iter.Seq[V], index int) (V, bool) {
 //
 //	// yield each element of the slice
 //	// yields ("a"), ("b"), ("c")
-//	vals := seq.Yield([]string{"a", "b", "c"}...)
+//	letters := []string{"a", "b", "c"}
+//	vals := seq.Yield(letters...)
 //
 //	// yields (1), (2), (3)
 //	vals := seq.Yield(1, 2, 3)

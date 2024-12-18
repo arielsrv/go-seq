@@ -39,5 +39,15 @@ linters-settings:
         disabled: false
       - name: import-shadowing
         disabled: false
+      - name: exported
+        arguments:
+          - sayRepetitiveInsteadOfStutters
+          - checkPublicInterface
   wsl:
     allow-cuddle-declarations: true
+
+issues:
+  include:
+    - EXC0012  # EXC0012 revive: Annoying issue about not having a comment. The rare codebase has such comments
+    - EXC0013  # EXC0012 revive: Annoying issue about not having a comment. The rare codebase has such comments
+    - EXC0014  # EXC0014 revive: Annoying issue about not having a comment. The rare codebase has such comments

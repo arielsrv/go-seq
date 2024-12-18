@@ -123,7 +123,7 @@ func YieldKeyValues[Map ~map[K]V, K comparable, V any](m Map) iter.Seq2[K, V] {
 // Zip returns a key-value sequence that combines values from two value sequences.
 // The first sequence is used as the key and the second sequence is used as the value.
 //
-// The resulting sequence will be as long as the shortest value sequence.
+// The resulting sequence will be as long as the shortest given sequence.
 // Any remaining values in the longer sequence are ignored.
 //
 // Example:
