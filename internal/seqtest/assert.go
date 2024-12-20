@@ -13,7 +13,7 @@ func AssertEqual[V any](t *testing.T, expected []V, seq iter.Seq[V]) {
 	t.Helper()
 
 	actual := slices.Collect(seq)
-	assert.Equal(t, expected, actual)
+	assert.Equal(t, expected, actual, "sequence did not yield the expected values")
 }
 
 // KeyValuePair represents a value and its key.
@@ -32,5 +32,5 @@ func AssertEqual2[K, V any](t *testing.T, expected []KeyValuePair[K, V], seq ite
 		actual = append(actual, KeyValuePair[K, V]{k, v})
 	}
 
-	assert.Equal(t, expected, actual)
+	assert.Equal(t, expected, actual, "sequence did not yield the expected key-value pairs")
 }
