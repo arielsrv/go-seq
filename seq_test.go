@@ -753,13 +753,21 @@ func TestRange(t *testing.T) {
 		})
 	}
 
-	t.Run("panic on non-positive step", func(t *testing.T) {
+	t.Run("panic on step not greater than 0", func(t *testing.T) {
 		assert.Panics(t, func() {
 			seq.Range(1, 5, 0)
 		})
 		assert.Panics(t, func() {
 			seq.Range(1, 5, -1)
 		})
+		assert.Panics(t, func() {
+			seq.Range(1, 5, -0.1)
+		})
+	})
+
+	t.Run("float range", func(t *testing.T) {
+		got := seq.Range(0.0, 2.0, 0.5)
+		seqtest.AssertEqual(t, []float64{0.0, 0.5, 1.0, 1.5, 2.0}, got)
 	})
 }
 

@@ -30,7 +30,7 @@ func ContainsKey[K comparable, V any](seq iter.Seq2[K, V], key K) bool {
 
 // Empty2 returns an empty key-value sequence.
 func Empty2[K, V any]() iter.Seq2[K, V] {
-	return func(_ func(K, V) bool) {}
+	return func(func(K, V) bool) {}
 }
 
 // Keys returns the keys from a key-value sequence.

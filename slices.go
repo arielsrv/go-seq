@@ -15,7 +15,7 @@ func Collect[V any](seq iter.Seq[V]) []V {
 // keeping only the last n values.
 func CollectLast[V any](seq iter.Seq[V], n int) []V {
 	if n < 0 {
-		panic("n must be non-negative")
+		panic("seq.CollectLast: n must be non-negative")
 	}
 
 	if n == 0 {

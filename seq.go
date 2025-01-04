@@ -422,10 +422,14 @@ func Prepend[V any](seq iter.Seq[V], vals ...V) iter.Seq[V] {
 	}
 }
 
-// Range returns a sequence of numbers from start to end (inclusive) with the given step size.
+// Range returns a sequence of numbers from start to end (inclusive)
+// incremented by a given step size.
+//
+// If iteration of the sequence is stopped early and resumed,
+// the sequence will start from the beginning.
 func Range[V constraints.Integer | constraints.Float](start, end, step V) iter.Seq[V] {
-	if step < 1 {
-		panic("step must be positive")
+	if !(float64(step) > float64(0)) {
+		panic("seq.Range: step must be greater than 0")
 	}
 
 	if end < start {
@@ -648,12 +652,12 @@ func Where[V any](seq iter.Seq[V], f func(V) bool) iter.Seq[V] {
 // This panics if the given index is negative.
 func ValueAt[V any](seq iter.Seq[V], index int) (V, bool) {
 	if index < 0 {
-		panic("index must be non-negative")
+		panic("seq.ValueAt: index must be non-negative")
 	}
 
 	var zero V
-
 	i := 0
+
 	for v := range seq {
 		if i == index {
 			return v, true
@@ -690,7 +694,10 @@ func Yield[V any](vals ...V) iter.Seq[V] {
 
 // YieldBackwards returns a sequence of values in reverse order.
 //
-// See Yield for more information.
+// Example:
+//
+//	// yields (3), (2), (1)
+//	vals := seq.YieldBackwards(1, 2, 3)
 func YieldBackwards[V any](vals ...V) iter.Seq[V] {
 	return func(yield func(V) bool) {
 		for i := len(vals) - 1; i >= 0; i-- {
