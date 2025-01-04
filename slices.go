@@ -73,9 +73,9 @@ func SortedBy[V any, K cmp.Ordered](seq iter.Seq[V], f func(V) K) []V {
 	return s
 }
 
-// SortedByStable collects values from a sequence into a new slice and then uses a
+// SortedStableBy collects values from a sequence into a new slice and then uses a
 // function to select a key for sorting.
-func SortedByStable[V any, K cmp.Ordered](seq iter.Seq[V], f func(V) K) []V {
+func SortedStableBy[V any, K cmp.Ordered](seq iter.Seq[V], f func(V) K) []V {
 	s := slices.Collect(seq)
 
 	slices.SortStableFunc(s, func(a, b V) int {
