@@ -1,0 +1,18 @@
+version: '3'
+
+tasks:
+  setup:
+    cmds:
+      - go mod download -x
+
+  build:
+    cmds:
+      - go build -v ./...
+
+  test:
+    cmds:
+      - go test -v -timeout 10s ./...
+
+  lint:
+    cmds:
+      - golangci-lint run -v
