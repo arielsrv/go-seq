@@ -39,6 +39,17 @@ func Any[V any](seq iter.Seq[V]) bool {
 	return false
 }
 
+// AnyFunc determines if a sequence has any value that satisfies a predicate.
+func AnyFunc[V any](seq iter.Seq[V], f func(V) bool) bool {
+	for v := range seq {
+		if f(v) {
+			return true
+		}
+	}
+
+	return false
+}
+
 // Append adds values to the end of a sequence.
 func Append[V any](seq iter.Seq[V], vals ...V) iter.Seq[V] {
 	return func(yield func(V) bool) {
@@ -126,22 +137,11 @@ func Contains[V comparable](seq iter.Seq[V], val V) bool {
 	return false
 }
 
-// ContainsFunc determines if a sequence contains a value that satisfies a predicate.
-func ContainsFunc[V any](seq iter.Seq[V], f func(V) bool) bool {
-	for v := range seq {
-		if f(v) {
-			return true
-		}
-	}
-
-	return false
-}
-
 // Count returns the number of values in a sequence.
 //
 // This iterates over the entire sequence to count the values.
 // Use [Any] instead if you only need to check whether the sequence has any values.
-// Use [Single] instead if you only need to check whether the sequence has exactly one value.
+// Use [Single] instead if you need to check whether the sequence has exactly one value.
 func Count[V any](seq iter.Seq[V]) int {
 	count := 0
 	for range seq {
@@ -156,7 +156,7 @@ func Count[V any](seq iter.Seq[V]) int {
 // This iterates over the entire sequence to count the values.
 // Use [AnyFunc] instead if you only need to check whether the sequence has any values that satisfy
 // a predicate.
-// Use [SingleFunc] instead if you only need to check whether the sequence has exactly one value that
+// Use [SingleFunc] instead if you need to check whether the sequence has exactly one value that
 // satisfies a predicate.
 func CountFunc[V any](seq iter.Seq[V], f func(V) bool) int {
 	count := 0
@@ -188,7 +188,7 @@ func Equal[V comparable](seq1, seq2 iter.Seq[V]) bool {
 		}
 
 		if v1 != v2 {
-			// check if each value is equal
+			// each element must be equal
 			return false
 		}
 	}
@@ -396,8 +396,7 @@ func MinFunc[V any](seq iter.Seq[V], f func(V, V) int) (V, bool) {
 func OfType[V, VOut any](seq iter.Seq[V]) iter.Seq[VOut] {
 	return func(yield func(VOut) bool) {
 		for v := range seq {
-			var anyVal any = v
-			if out, ok := anyVal.(VOut); ok {
+			if out, ok := any(v).(VOut); ok {
 				if !yield(out) {
 					return
 				}

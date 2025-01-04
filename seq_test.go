@@ -10,9 +10,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func isEven(v int) bool              { return v%2 == 0 }
-func repeat2[V any](v V) iter.Seq[V] { return seq.Yield(v, v) }
-func valString[V any](v V) string    { return fmt.Sprint(v) }
+func isEven(v int) bool             { return v%2 == 0 }
+func double[V any](v V) iter.Seq[V] { return seq.Yield(v, v) }
+func toString[V any](v V) string    { return fmt.Sprint(v) }
 
 func TestAggregate(t *testing.T) {
 	tests := []struct {
@@ -121,6 +121,41 @@ func TestAny(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := seq.Any(tt.seq)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestAnyFunc(t *testing.T) {
+	tests := []struct {
+		name string
+		seq  iter.Seq[int]
+		f    func(int) bool
+		want bool
+	}{
+		{
+			name: "found",
+			seq:  seq.Yield(1, 2, 3),
+			f:    isEven,
+			want: true,
+		},
+		{
+			name: "none",
+			seq:  seq.Yield(1, 3, 5),
+			f:    isEven,
+			want: false,
+		},
+		{
+			name: "empty",
+			seq:  seq.Yield[int](),
+			f:    isEven,
+			want: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := seq.AnyFunc(tt.seq, tt.f)
 			assert.Equal(t, tt.want, got)
 		})
 	}
@@ -285,41 +320,6 @@ func TestContains(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := seq.Contains(tt.seq, tt.val)
-			assert.Equal(t, tt.want, got)
-		})
-	}
-}
-
-func TestContainsFunc(t *testing.T) {
-	tests := []struct {
-		name string
-		seq  iter.Seq[int]
-		f    func(int) bool
-		want bool
-	}{
-		{
-			name: "found",
-			seq:  seq.Yield(1, 2, 3),
-			f:    isEven,
-			want: true,
-		},
-		{
-			name: "none",
-			seq:  seq.Yield(1, 3, 5),
-			f:    isEven,
-			want: false,
-		},
-		{
-			name: "empty",
-			seq:  seq.Yield[int](),
-			f:    isEven,
-			want: false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := seq.ContainsFunc(tt.seq, tt.f)
 			assert.Equal(t, tt.want, got)
 		})
 	}
@@ -493,7 +493,7 @@ func TestValueAt(t *testing.T) {
 }
 
 func TestEmpty(t *testing.T) {
-	got := seq.Yield[int]()
+	got := seq.Empty[int]()
 	seqtest.AssertEqual(t, nil, got)
 }
 
@@ -808,19 +808,19 @@ func TestSelect(t *testing.T) {
 		{
 			name: "multiple",
 			seq:  seq.Yield(1, 2, 3),
-			f:    valString[int],
+			f:    toString[int],
 			want: []string{"1", "2", "3"},
 		},
 		{
 			name: "single",
 			seq:  seq.Yield(42),
-			f:    valString[int],
+			f:    toString[int],
 			want: []string{"42"},
 		},
 		{
 			name: "empty",
 			seq:  seq.Yield[int](),
-			f:    valString[int],
+			f:    toString[int],
 			want: nil,
 		},
 	}
@@ -843,7 +843,7 @@ func TestSelectKeys(t *testing.T) {
 		{
 			name: "multiple",
 			seq:  seq.Yield(1, 2, 3),
-			f:    valString[int],
+			f:    toString[int],
 			want: []seqtest.KeyValuePair[string, int]{
 				{Key: "1", Value: 1},
 				{Key: "2", Value: 2},
@@ -853,7 +853,7 @@ func TestSelectKeys(t *testing.T) {
 		{
 			name: "single",
 			seq:  seq.Yield(42),
-			f:    valString[int],
+			f:    toString[int],
 			want: []seqtest.KeyValuePair[string, int]{
 				{Key: "42", Value: 42},
 			},
@@ -861,7 +861,7 @@ func TestSelectKeys(t *testing.T) {
 		{
 			name: "empty",
 			seq:  seq.Yield[int](),
-			f:    valString[int],
+			f:    toString[int],
 			want: nil,
 		},
 	}
@@ -884,19 +884,19 @@ func TestSelectMany(t *testing.T) {
 		{
 			name: "multiple",
 			seq:  seq.Yield(1, 2, 3),
-			f:    repeat2[int],
+			f:    double[int],
 			want: []int{1, 1, 2, 2, 3, 3},
 		},
 		{
 			name: "single",
 			seq:  seq.Yield(5),
-			f:    repeat2[int],
+			f:    double[int],
 			want: []int{5, 5},
 		},
 		{
 			name: "empty outer",
 			seq:  seq.Yield[int](),
-			f:    repeat2[int],
+			f:    double[int],
 			want: nil,
 		},
 		{
