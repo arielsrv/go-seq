@@ -707,3 +707,14 @@ func YieldBackwards[V any](vals ...V) iter.Seq[V] {
 		}
 	}
 }
+
+// YieldChan returns a sequence of values from a channel.
+func YieldChan[V any](ch <-chan V) iter.Seq[V] {
+	return func(yield func(V) bool) {
+		for v := range ch {
+			if !yield(v) {
+				return
+			}
+		}
+	}
+}
