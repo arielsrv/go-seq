@@ -81,7 +81,7 @@ func Where2[K, V any](seq iter.Seq2[K, V], f func(K, V) bool) iter.Seq2[K, V] {
 	}
 }
 
-// WithIndex return key-value pairs from a sequence of values by incorporating the sequence
+// WithIndex returns key-value pairs from a sequence of values by incorporating the sequence
 // index as the key.
 func WithIndex[V any](seq iter.Seq[V]) iter.Seq2[int, V] {
 	return func(yield func(int, V) bool) {
