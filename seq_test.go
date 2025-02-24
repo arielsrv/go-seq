@@ -696,79 +696,150 @@ func TestPrepend(t *testing.T) {
 
 func TestRange(t *testing.T) {
 	tests := []struct {
-		name  string
-		start int
-		end   int
-		step  int
-		want  []int
+		name    string
+		start   int
+		end     int
+		step    int
+		want    []int
+		wantErr string
 	}{
 		{
-			name:  "ascending step 1",
+			name:  "ascending positive step",
 			start: 1,
 			end:   5,
 			step:  1,
 			want:  []int{1, 2, 3, 4, 5},
 		},
 		{
-			name:  "ascending step 2",
-			start: 1,
-			end:   5,
-			step:  2,
-			want:  []int{1, 3, 5},
+			name:    "ascending negative step",
+			start:   1,
+			end:     5,
+			step:    -1,
+			wantErr: "seq.Range: step must be positive for ascending ranges",
 		},
 		{
-			name:  "descending step 1",
+			name:  "descending negative step",
 			start: 5,
 			end:   1,
-			step:  1,
+			step:  -1,
 			want:  []int{5, 4, 3, 2, 1},
 		},
 		{
-			name:  "descending step 2",
-			start: 5,
-			end:   1,
-			step:  2,
-			want:  []int{5, 3, 1},
+			name:    "descending positive step",
+			start:   5,
+			end:     1,
+			step:    1,
+			wantErr: "seq.Range: step must be negative for descending ranges",
 		},
 		{
 			name:  "start equals end",
-			start: 3,
-			end:   3,
+			start: 5,
+			end:   5,
 			step:  1,
-			want:  []int{3},
+			want:  []int{5},
 		},
 		{
-			name:  "larger step",
-			start: 0,
-			end:   10,
+			name:    "zero step",
+			start:   1,
+			end:     5,
+			step:    0,
+			wantErr: "seq.Range: step must be non-zero",
+		},
+		{
+			name:  "step past end ascending",
+			start: 1,
+			end:   5,
 			step:  3,
-			want:  []int{0, 3, 6, 9},
+			want:  []int{1, 4},
+		},
+		{
+			name:  "step past end descending",
+			start: 5,
+			end:   1,
+			step:  -3,
+			want:  []int{5, 2},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := seq.Range(tt.start, tt.end, tt.step)
+			got, err := seq.Range(tt.start, tt.end, tt.step)
 			seqtest.AssertEqual(t, tt.want, got)
+
+			if tt.wantErr != "" {
+				assert.EqualError(t, err, tt.wantErr)
+			} else {
+				assert.NoError(t, err)
+			}
 		})
 	}
+}
 
-	t.Run("panic on step not greater than 0", func(t *testing.T) {
-		assert.Panics(t, func() {
-			seq.Range(1, 5, 0)
-		})
-		assert.Panics(t, func() {
-			seq.Range(1, 5, -1)
-		})
-		assert.Panics(t, func() {
-			seq.Range(1, 5, -0.1)
-		})
-	})
+func TestRange_Floats(t *testing.T) {
+	tests := []struct {
+		name    string
+		start   float64
+		end     float64
+		step    float64
+		want    []float64
+		wantErr string
+	}{
+		{
+			name:  "ascending positive step",
+			start: 0.5,
+			end:   2.5,
+			step:  0.5,
+			want:  []float64{0.5, 1.0, 1.5, 2.0, 2.5},
+		},
+		{
+			name:    "ascending negative step",
+			start:   0.5,
+			end:     2.5,
+			step:    -1,
+			wantErr: "seq.Range: step must be positive for ascending ranges",
+		},
+		{
+			name:  "descending negative step",
+			start: 2.5,
+			end:   0.5,
+			step:  -0.5,
+			want:  []float64{2.5, 2.0, 1.5, 1.0, 0.5},
+		},
+		{
+			name:    "descending positive step",
+			start:   2.5,
+			end:     0.5,
+			step:    1,
+			wantErr: "seq.Range: step must be negative for descending ranges",
+		},
+		{
+			name:  "step past end ascending",
+			start: 0.5,
+			end:   2.5,
+			step:  1.5,
+			want:  []float64{0.5, 2.0},
+		},
+		{
+			name:  "step past end descending",
+			start: 2.5,
+			end:   0.5,
+			step:  -1.5,
+			want:  []float64{2.5, 1.0},
+		},
+	}
 
-	t.Run("float range", func(t *testing.T) {
-		got := seq.Range(0.0, 2.0, 0.5)
-		seqtest.AssertEqual(t, []float64{0.0, 0.5, 1.0, 1.5, 2.0}, got)
-	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := seq.Range(tt.start, tt.end, tt.step)
+			seqtest.AssertEqual(t, tt.want, got)
+
+			if tt.wantErr != "" {
+				assert.EqualError(t, err, tt.wantErr)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
 }
 
 func TestRepeat(t *testing.T) {
@@ -919,7 +990,8 @@ func TestSelectMany(t *testing.T) {
 			name: "varying inner lengths",
 			seq:  seq.Yield(1, 2, 3),
 			f: func(v int) iter.Seq[int] {
-				return seq.Range(1, v, 1)
+				r, _ := seq.Range(1, v, 1)
+				return r
 			},
 			want: []int{1, 1, 2, 1, 2, 3},
 		},

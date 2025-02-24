@@ -2,6 +2,7 @@ package seq
 
 import (
 	"cmp"
+	"errors"
 	"iter"
 
 	"golang.org/x/exp/constraints"
@@ -427,30 +428,37 @@ func Prepend[V any](seq iter.Seq[V], vals ...V) iter.Seq[V] {
 //
 // If iteration of the sequence is stopped early and resumed,
 // the sequence will start from the beginning.
-func Range[V constraints.Integer | constraints.Float](start, end, step V) iter.Seq[V] {
-	if !(float64(step) > float64(0)) {
-		panic("seq.Range: step must be greater than 0")
+func Range[V constraints.Integer | constraints.Float](start, end, step V) (iter.Seq[V], error) {
+	switch {
+	case step == 0:
+		return Empty[V](), errors.New("seq.Range: step must be non-zero")
+
+	case end > start && float64(step) < float64(0):
+		return Empty[V](), errors.New("seq.Range: step must be positive for ascending ranges")
+
+	case end < start && float64(step) > float64(0):
+		return Empty[V](), errors.New("seq.Range: step must be negative for descending ranges")
 	}
 
 	if end < start {
 		// Descending
 		return func(yield func(V) bool) {
-			for i := start; i >= end; i -= step {
+			for i := start; i >= end; i += step {
 				if !yield(i) {
 					return
 				}
 			}
-		}
+		}, nil
 	}
 
-	// Ascending
+	// Ascending or equal
 	return func(yield func(V) bool) {
 		for i := start; i <= end; i += step {
 			if !yield(i) {
 				return
 			}
 		}
-	}
+	}, nil
 }
 
 // Repeat returns a sequence that yields a given value n numer of times.
