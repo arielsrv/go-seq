@@ -240,14 +240,15 @@ func First[V any](seq iter.Seq[V]) (V, bool) {
 //
 // A second return value indicates whether the sequence contained any value that satisfied the predicate.
 func FirstFunc[V any](seq iter.Seq[V], f func(V) bool) (V, bool) {
-	var v V
-	for v = range seq {
+	var zero V
+
+	for v := range seq {
 		if f(v) {
 			return v, true
 		}
 	}
 
-	return v, false
+	return zero, false
 }
 
 // Last returns the last value of a sequence.

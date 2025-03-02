@@ -10,9 +10,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func isEven(v int) bool             { return v%2 == 0 }
-func double[V any](v V) iter.Seq[V] { return seq.Yield(v, v) }
-func toString[V any](v V) string    { return fmt.Sprint(v) }
+func isEven(v int) bool                 { return v%2 == 0 }
+func double[V any](v V) iter.Seq[V]     { return seq.Yield(v, v) }
+func toString[V any](v V) string        { return fmt.Sprint(v) }
+func isEqual[T comparable](a, b T) bool { return a == b }
+func isAbsEqual(a, b int) bool          { return a*a == b*b }
 
 func TestAggregate(t *testing.T) {
 	tests := []struct {
@@ -432,69 +434,62 @@ func TestDistinct(t *testing.T) {
 	}
 }
 
-func TestValueAt(t *testing.T) {
+func TestEmpty(t *testing.T) {
+	got := seq.Empty[int]()
+	seqtest.AssertEqual(t, nil, got)
+}
+
+func TestEqualFunc(t *testing.T) {
 	tests := []struct {
-		name  string
-		seq   iter.Seq[int]
-		index int
-		want  int
-		ok    bool
+		name string
+		seq1 iter.Seq[int]
+		seq2 iter.Seq[int]
+		f    func(int, int) bool
+		want bool
 	}{
 		{
-			name:  "found",
-			seq:   seq.Yield(1, 2, 3, 4, 5),
-			index: 2,
-			want:  3,
-			ok:    true,
+			name: "equal sequences",
+			seq1: seq.Yield(1, 2, 3),
+			seq2: seq.Yield(1, 2, 3),
+			f:    isEqual[int],
+			want: true,
 		},
 		{
-			name:  "first",
-			seq:   seq.Yield(1, 2, 3),
-			index: 0,
-			want:  1,
-			ok:    true,
+			name: "equal with custom comparison",
+			seq1: seq.Yield(1, -2, 3),
+			seq2: seq.Yield(-1, 2, -3),
+			f:    isAbsEqual,
+			want: true,
 		},
 		{
-			name:  "last",
-			seq:   seq.Yield(1, 2, 3),
-			index: 2,
-			want:  3,
-			ok:    true,
+			name: "different lengths",
+			seq1: seq.Yield(1, 2, 3),
+			seq2: seq.Yield(1, 2),
+			f:    isEqual[int],
+			want: false,
 		},
 		{
-			name:  "index out of bounds",
-			seq:   seq.Yield(1, 2, 3),
-			index: 5,
-			want:  0,
-			ok:    false,
+			name: "different values",
+			seq1: seq.Yield(1, 2, 3),
+			seq2: seq.Yield(1, 2, 4),
+			f:    isEqual[int],
+			want: false,
 		},
 		{
-			name:  "empty sequence",
-			seq:   seq.Yield[int](),
-			index: 2,
-			want:  0,
-			ok:    false,
+			name: "both empty",
+			seq1: seq.Yield[int](),
+			seq2: seq.Yield[int](),
+			f:    isEqual[int],
+			want: true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, ok := seq.ValueAt(tt.seq, tt.index)
+			got := seq.EqualFunc(tt.seq1, tt.seq2, tt.f)
 			assert.Equal(t, tt.want, got)
-			assert.Equal(t, tt.ok, ok)
 		})
 	}
-
-	t.Run("panic on negative index", func(t *testing.T) {
-		assert.Panics(t, func() {
-			seq.ValueAt(seq.Yield(1, 2, 3), -1)
-		})
-	})
-}
-
-func TestEmpty(t *testing.T) {
-	got := seq.Empty[int]()
-	seqtest.AssertEqual(t, nil, got)
 }
 
 func TestFirst(t *testing.T) {
@@ -527,6 +522,53 @@ func TestFirst(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, ok := seq.First(tt.seq)
+			assert.Equal(t, tt.want, got)
+			assert.Equal(t, tt.ok, ok)
+		})
+	}
+}
+
+func TestFirstFunc(t *testing.T) {
+	tests := []struct {
+		name string
+		seq  iter.Seq[int]
+		f    func(int) bool
+		want int
+		ok   bool
+	}{
+		{
+			name: "found first",
+			seq:  seq.Yield(1, 2, 3, 4),
+			f:    isEven,
+			want: 2,
+			ok:   true,
+		},
+		{
+			name: "not found",
+			seq:  seq.Yield(1, 3, 5),
+			f:    isEven,
+			want: 0,
+			ok:   false,
+		},
+		{
+			name: "empty sequence",
+			seq:  seq.Yield[int](),
+			f:    isEven,
+			want: 0,
+			ok:   false,
+		},
+		{
+			name: "first element matches",
+			seq:  seq.Yield(2, 4, 6),
+			f:    isEven,
+			want: 2,
+			ok:   true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, ok := seq.FirstFunc(tt.seq, tt.f)
 			assert.Equal(t, tt.want, got)
 			assert.Equal(t, tt.ok, ok)
 		})
@@ -1005,6 +1047,53 @@ func TestSelectMany(t *testing.T) {
 	}
 }
 
+func TestSingleFunc(t *testing.T) {
+	tests := []struct {
+		name string
+		seq  iter.Seq[int]
+		f    func(int) bool
+		want int
+		ok   bool
+	}{
+		{
+			name: "single match",
+			seq:  seq.Yield(1, 2, 3),
+			f:    func(x int) bool { return x == 2 },
+			want: 2,
+			ok:   true,
+		},
+		{
+			name: "no matches",
+			seq:  seq.Yield(1, 3, 5),
+			f:    isEven,
+			want: 0,
+			ok:   false,
+		},
+		{
+			name: "multiple matches",
+			seq:  seq.Yield(2, 4, 6),
+			f:    isEven,
+			want: 0,
+			ok:   false,
+		},
+		{
+			name: "empty sequence",
+			seq:  seq.Yield[int](),
+			f:    isEven,
+			want: 0,
+			ok:   false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, ok := seq.SingleFunc(tt.seq, tt.f)
+			assert.Equal(t, tt.want, got)
+			assert.Equal(t, tt.ok, ok)
+		})
+	}
+}
+
 func TestSkip(t *testing.T) {
 	tests := []struct {
 		name string
@@ -1097,4 +1186,64 @@ func TestTake(t *testing.T) {
 			seqtest.AssertEqual(t, tt.want, got)
 		})
 	}
+}
+
+func TestValueAt(t *testing.T) {
+	tests := []struct {
+		name  string
+		seq   iter.Seq[int]
+		index int
+		want  int
+		ok    bool
+	}{
+		{
+			name:  "found",
+			seq:   seq.Yield(1, 2, 3, 4, 5),
+			index: 2,
+			want:  3,
+			ok:    true,
+		},
+		{
+			name:  "first",
+			seq:   seq.Yield(1, 2, 3),
+			index: 0,
+			want:  1,
+			ok:    true,
+		},
+		{
+			name:  "last",
+			seq:   seq.Yield(1, 2, 3),
+			index: 2,
+			want:  3,
+			ok:    true,
+		},
+		{
+			name:  "index out of bounds",
+			seq:   seq.Yield(1, 2, 3),
+			index: 5,
+			want:  0,
+			ok:    false,
+		},
+		{
+			name:  "empty sequence",
+			seq:   seq.Yield[int](),
+			index: 2,
+			want:  0,
+			ok:    false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, ok := seq.ValueAt(tt.seq, tt.index)
+			assert.Equal(t, tt.want, got)
+			assert.Equal(t, tt.ok, ok)
+		})
+	}
+
+	t.Run("panic on negative index", func(t *testing.T) {
+		assert.Panics(t, func() {
+			seq.ValueAt(seq.Yield(1, 2, 3), -1)
+		})
+	})
 }
