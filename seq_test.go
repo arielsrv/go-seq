@@ -24,7 +24,7 @@ func isEqual[T comparable](a, b T) bool { return a == b }
 func isAbsEqual(a, b int) bool          { return abs(a) == abs(b) }
 func toString[V any](v V) string        { return fmt.Sprint(v) }
 
-func TestAggregate(t *testing.T) {
+func Test_Aggregate(t *testing.T) {
 	tests := []struct {
 		name string
 		seq  iter.Seq[int]
@@ -75,7 +75,7 @@ func TestAggregate(t *testing.T) {
 	}
 }
 
-func TestAll(t *testing.T) {
+func Test_All(t *testing.T) {
 	tests := []struct {
 		name string
 		seq  iter.Seq[int]
@@ -110,7 +110,7 @@ func TestAll(t *testing.T) {
 	}
 }
 
-func TestAny(t *testing.T) {
+func Test_Any(t *testing.T) {
 	tests := []struct {
 		name string
 		seq  iter.Seq[int]
@@ -136,7 +136,7 @@ func TestAny(t *testing.T) {
 	}
 }
 
-func TestAnyFunc(t *testing.T) {
+func Test_AnyFunc(t *testing.T) {
 	tests := []struct {
 		name string
 		seq  iter.Seq[int]
@@ -171,7 +171,7 @@ func TestAnyFunc(t *testing.T) {
 	}
 }
 
-func TestAppend(t *testing.T) {
+func Test_Append(t *testing.T) {
 	tests := []struct {
 		name string
 		seq  iter.Seq[int]
@@ -206,7 +206,7 @@ func TestAppend(t *testing.T) {
 	}
 }
 
-func TestChunk(t *testing.T) {
+func Test_Chunk(t *testing.T) {
 	tests := []struct {
 		name string
 		seq  iter.Seq[int]
@@ -259,7 +259,7 @@ func TestChunk(t *testing.T) {
 	}
 }
 
-func TestConcat(t *testing.T) {
+func Test_Concat(t *testing.T) {
 	tests := []struct {
 		name string
 		seqs []iter.Seq[int]
@@ -300,7 +300,7 @@ func TestConcat(t *testing.T) {
 	}
 }
 
-func TestContains(t *testing.T) {
+func Test_Contains(t *testing.T) {
 	tests := []struct {
 		name string
 		seq  iter.Seq[int]
@@ -335,7 +335,7 @@ func TestContains(t *testing.T) {
 	}
 }
 
-func TestCount(t *testing.T) {
+func Test_Count(t *testing.T) {
 	tests := []struct {
 		name string
 		seq  iter.Seq[int]
@@ -366,7 +366,7 @@ func TestCount(t *testing.T) {
 	}
 }
 
-func TestCountFunc(t *testing.T) {
+func Test_CountFunc(t *testing.T) {
 	tests := []struct {
 		name string
 		seq  iter.Seq[int]
@@ -401,7 +401,7 @@ func TestCountFunc(t *testing.T) {
 	}
 }
 
-func TestDistinct(t *testing.T) {
+func Test_Distinct(t *testing.T) {
 	tests := []struct {
 		name string
 		seq  iter.Seq[int]
@@ -442,12 +442,12 @@ func TestDistinct(t *testing.T) {
 	}
 }
 
-func TestEmpty(t *testing.T) {
+func Test_Empty(t *testing.T) {
 	got := seq.Empty[int]()
 	seqtest.AssertEqual(t, nil, got)
 }
 
-func TestEqualFunc(t *testing.T) {
+func Test_EqualFunc(t *testing.T) {
 	tests := []struct {
 		name string
 		seq1 iter.Seq[int]
@@ -500,7 +500,7 @@ func TestEqualFunc(t *testing.T) {
 	}
 }
 
-func TestFirst(t *testing.T) {
+func Test_First(t *testing.T) {
 	tests := []struct {
 		name string
 		seq  iter.Seq[int]
@@ -536,7 +536,7 @@ func TestFirst(t *testing.T) {
 	}
 }
 
-func TestFirstFunc(t *testing.T) {
+func Test_FirstFunc(t *testing.T) {
 	tests := []struct {
 		name string
 		seq  iter.Seq[int]
@@ -583,7 +583,7 @@ func TestFirstFunc(t *testing.T) {
 	}
 }
 
-func TestLast(t *testing.T) {
+func Test_Last(t *testing.T) {
 	tests := []struct {
 		name string
 		seq  iter.Seq[int]
@@ -619,7 +619,7 @@ func TestLast(t *testing.T) {
 	}
 }
 
-func TestMax(t *testing.T) {
+func Test_Max(t *testing.T) {
 	tests := []struct {
 		name string
 		seq  iter.Seq[int]
@@ -661,7 +661,7 @@ func TestMax(t *testing.T) {
 	}
 }
 
-func TestMin(t *testing.T) {
+func Test_Min(t *testing.T) {
 	tests := []struct {
 		name string
 		seq  iter.Seq[int]
@@ -697,7 +697,7 @@ func TestMin(t *testing.T) {
 	}
 }
 
-func TestPrepend(t *testing.T) {
+func Test_Prepend(t *testing.T) {
 	tests := []struct {
 		name string
 		seq  iter.Seq[int]
@@ -744,7 +744,7 @@ func TestPrepend(t *testing.T) {
 	}
 }
 
-func TestRange(t *testing.T) {
+func Test_Range(t *testing.T) {
 	tests := []struct {
 		name    string
 		start   int
@@ -825,7 +825,7 @@ func TestRange(t *testing.T) {
 	}
 }
 
-func TestRange_Floats(t *testing.T) {
+func Test_Range_Floats(t *testing.T) {
 	tests := []struct {
 		name    string
 		start   float64
@@ -892,7 +892,7 @@ func TestRange_Floats(t *testing.T) {
 	}
 }
 
-func TestRepeat(t *testing.T) {
+func Test_Repeat(t *testing.T) {
 	tests := []struct {
 		name  string
 		val   int
@@ -927,7 +927,7 @@ func TestRepeat(t *testing.T) {
 	}
 }
 
-func TestSelect(t *testing.T) {
+func Test_Select(t *testing.T) {
 	tests := []struct {
 		name string
 		seq  iter.Seq[int]
@@ -962,7 +962,7 @@ func TestSelect(t *testing.T) {
 	}
 }
 
-func TestSelectKeys(t *testing.T) {
+func Test_SelectKeys(t *testing.T) {
 	tests := []struct {
 		name string
 		seq  iter.Seq[int]
@@ -1003,7 +1003,7 @@ func TestSelectKeys(t *testing.T) {
 	}
 }
 
-func TestSelectMany(t *testing.T) {
+func Test_SelectMany(t *testing.T) {
 	tests := []struct {
 		name string
 		seq  iter.Seq[int]
@@ -1055,7 +1055,7 @@ func TestSelectMany(t *testing.T) {
 	}
 }
 
-func TestSingleFunc(t *testing.T) {
+func Test_SingleFunc(t *testing.T) {
 	tests := []struct {
 		name string
 		seq  iter.Seq[int]
@@ -1102,7 +1102,7 @@ func TestSingleFunc(t *testing.T) {
 	}
 }
 
-func TestSkip(t *testing.T) {
+func Test_Skip(t *testing.T) {
 	tests := []struct {
 		name string
 		seq  iter.Seq[int]
@@ -1149,7 +1149,7 @@ func TestSkip(t *testing.T) {
 	}
 }
 
-func TestTake(t *testing.T) {
+func Test_Take(t *testing.T) {
 	tests := []struct {
 		name string
 		seq  iter.Seq[int]
@@ -1196,7 +1196,7 @@ func TestTake(t *testing.T) {
 	}
 }
 
-func TestValueAt(t *testing.T) {
+func Test_ValueAt(t *testing.T) {
 	tests := []struct {
 		name  string
 		seq   iter.Seq[int]

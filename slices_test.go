@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCollectLast(t *testing.T) {
+func Test_CollectLast(t *testing.T) {
 	tests := []struct {
 		name string
 		seq  iter.Seq[int]
