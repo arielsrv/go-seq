@@ -10,11 +10,19 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func isEven(v int) bool                 { return v%2 == 0 }
+func abs(x int) int {
+	if x < 0 {
+		return -x
+	}
+
+	return x
+}
+
 func double[V any](v V) iter.Seq[V]     { return seq.Yield(v, v) }
-func toString[V any](v V) string        { return fmt.Sprint(v) }
+func isEven(v int) bool                 { return v%2 == 0 }
 func isEqual[T comparable](a, b T) bool { return a == b }
-func isAbsEqual(a, b int) bool          { return a*a == b*b }
+func isAbsEqual(a, b int) bool          { return abs(a) == abs(b) }
+func toString[V any](v V) string        { return fmt.Sprint(v) }
 
 func TestAggregate(t *testing.T) {
 	tests := []struct {
