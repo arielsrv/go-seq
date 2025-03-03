@@ -34,3 +34,17 @@ func AssertEqual2[K, V any](t *testing.T, expected []KeyValuePair[K, V], seq ite
 
 	assert.Equal(t, expected, actual, "sequence did not yield the expected key-value pairs")
 }
+
+// AssertElementsMatch2 asserts that the expected key-value pairs match the actual key-value pairs from a sequence
+// in any order.
+func AssertElementsMatch2[K, V any](t *testing.T, expected []KeyValuePair[K, V], seq iter.Seq2[K, V]) {
+	t.Helper()
+
+	//nolint:prealloc // No way of knowing the length of the sequence.
+	var actual []KeyValuePair[K, V]
+	for k, v := range seq {
+		actual = append(actual, KeyValuePair[K, V]{k, v})
+	}
+
+	assert.ElementsMatch(t, expected, actual, "sequence did not yield the expected key-value pairs")
+}
