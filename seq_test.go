@@ -18,6 +18,7 @@ func abs(x int) int {
 	return x
 }
 
+func cmpStringLen(a, b string) int      { return len(a) - len(b) }
 func double[V any](v V) iter.Seq[V]     { return seq.Yield(v, v) }
 func isEven(v int) bool                 { return v%2 == 0 }
 func isEqual[T comparable](a, b T) bool { return a == b }
@@ -202,6 +203,67 @@ func Test_Append(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got := seq.Append(tt.seq, tt.add...)
 			seqtest.AssertEqual(t, tt.want, got)
+		})
+	}
+}
+
+func Test_Average(t *testing.T) {
+	tests := []struct {
+		name string
+		seq  iter.Seq[int]
+		want float64
+	}{
+		{
+			name: "positive integers",
+			seq:  seq.Yield(1, 2, 3, 4),
+			want: 2.5,
+		},
+		{
+			name: "single value",
+			seq:  seq.Yield(5),
+			want: 5.0,
+		},
+		{
+			name: "empty sequence",
+			seq:  seq.Yield[int](),
+			want: 0.0,
+		},
+		{
+			name: "negative values",
+			seq:  seq.Yield(-2, -1, 0, 1, 2),
+			want: 0.0,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := seq.Average(tt.seq)
+			assert.InDelta(t, tt.want, got, 0.000001)
+		})
+	}
+
+	// Test with float values
+	floatTests := []struct {
+		name string
+		seq  iter.Seq[float64]
+		want float64
+	}{
+		{
+			name: "decimal values",
+			seq:  seq.Yield(1.5, 2.5, 3.5),
+			want: 2.5,
+		},
+		{
+			name: "mixed integers and decimals",
+			seq:  seq.Yield(1.0, 2.0, 3.5, 4.5),
+			want: 2.75,
+		},
+	}
+
+	for _, tt := range floatTests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := seq.Average(tt.seq)
+			assert.InDelta(t, tt.want, got, 0.000001)
 		})
 	}
 }
@@ -447,6 +509,53 @@ func Test_Empty(t *testing.T) {
 	seqtest.AssertEqual(t, nil, got)
 }
 
+func Test_Equal(t *testing.T) {
+	tests := []struct {
+		name string
+		seq1 iter.Seq[int]
+		seq2 iter.Seq[int]
+		want bool
+	}{
+		{
+			name: "equal sequences",
+			seq1: seq.Yield(1, 2, 3),
+			seq2: seq.Yield(1, 2, 3),
+			want: true,
+		},
+		{
+			name: "different lengths",
+			seq1: seq.Yield(1, 2, 3),
+			seq2: seq.Yield(1, 2),
+			want: false,
+		},
+		{
+			name: "different values",
+			seq1: seq.Yield(1, 2, 3),
+			seq2: seq.Yield(1, 2, 4),
+			want: false,
+		},
+		{
+			name: "both empty",
+			seq1: seq.Yield[int](),
+			seq2: seq.Yield[int](),
+			want: true,
+		},
+		{
+			name: "one empty",
+			seq1: seq.Yield(1, 2),
+			seq2: seq.Yield[int](),
+			want: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := seq.Equal(tt.seq1, tt.seq2)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
 func Test_EqualFunc(t *testing.T) {
 	tests := []struct {
 		name string
@@ -619,6 +728,53 @@ func Test_Last(t *testing.T) {
 	}
 }
 
+func Test_LastFunc(t *testing.T) {
+	tests := []struct {
+		name string
+		seq  iter.Seq[int]
+		f    func(int) bool
+		want int
+		ok   bool
+	}{
+		{
+			name: "found last",
+			seq:  seq.Yield(1, 2, 3, 4, 5, 6),
+			f:    isEven,
+			want: 6,
+			ok:   true,
+		},
+		{
+			name: "found in middle",
+			seq:  seq.Yield(2, 4, 5, 7, 9),
+			f:    isEven,
+			want: 4,
+			ok:   true,
+		},
+		{
+			name: "not found",
+			seq:  seq.Yield(1, 3, 5),
+			f:    isEven,
+			want: 0,
+			ok:   false,
+		},
+		{
+			name: "empty sequence",
+			seq:  seq.Yield[int](),
+			f:    isEven,
+			want: 0,
+			ok:   false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, ok := seq.LastFunc(tt.seq, tt.f)
+			assert.Equal(t, tt.want, got)
+			assert.Equal(t, tt.ok, ok)
+		})
+	}
+}
+
 func Test_Max(t *testing.T) {
 	tests := []struct {
 		name string
@@ -661,6 +817,93 @@ func Test_Max(t *testing.T) {
 	}
 }
 
+func Test_MaxBy(t *testing.T) {
+	tests := []struct {
+		name string
+		seq  iter.Seq[string]
+		f    func(string) int
+		want string
+		ok   bool
+	}{
+		{
+			name: "by length",
+			seq:  seq.Yield("a", "bb", "ccc", "dd"),
+			f:    func(s string) int { return len(s) },
+			want: "ccc",
+			ok:   true,
+		},
+		{
+			name: "single value",
+			seq:  seq.Yield("test"),
+			f:    func(s string) int { return len(s) },
+			want: "test",
+			ok:   true,
+		},
+		{
+			name: "empty sequence",
+			seq:  seq.Yield[string](),
+			f:    func(s string) int { return len(s) },
+			want: "",
+			ok:   false,
+		},
+		{
+			name: "same key values",
+			seq:  seq.Yield("aa", "bb", "cc"),
+			f:    func(s string) int { return len(s) },
+			want: "aa", // first occurrence is kept
+			ok:   true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, ok := seq.MaxBy(tt.seq, tt.f)
+			assert.Equal(t, tt.want, got)
+			assert.Equal(t, tt.ok, ok)
+		})
+	}
+}
+
+func Test_MaxFunc(t *testing.T) {
+	tests := []struct {
+		name string
+		seq  iter.Seq[string]
+		f    func(string, string) int
+		want string
+		ok   bool
+	}{
+		{
+			name: "by length comparison",
+			seq:  seq.Yield("a", "bb", "ccc", "dd"),
+			f:    cmpStringLen,
+			want: "ccc",
+			ok:   true,
+		},
+		{
+			name: "single value",
+			seq:  seq.Yield("test"),
+			f:    cmpStringLen,
+			want: "test",
+			ok:   true,
+		},
+		{
+			name: "empty sequence",
+			seq:  seq.Yield[string](),
+			f:    cmpStringLen,
+			want: "",
+			ok:   false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, ok := seq.MaxFunc(tt.seq, tt.f)
+			assert.Equal(t, tt.want, got)
+			assert.Equal(t, tt.ok, ok)
+		})
+	}
+}
+
 func Test_Min(t *testing.T) {
 	tests := []struct {
 		name string
@@ -693,6 +936,129 @@ func Test_Min(t *testing.T) {
 			got, ok := seq.Min(tt.seq)
 			assert.Equal(t, tt.want, got)
 			assert.Equal(t, tt.ok, ok)
+		})
+	}
+}
+
+func Test_MinBy(t *testing.T) {
+	tests := []struct {
+		name string
+		seq  iter.Seq[string]
+		f    func(string) int
+		want string
+		ok   bool
+	}{
+		{
+			name: "by length",
+			seq:  seq.Yield("a", "bb", "ccc", "dd"),
+			f:    func(s string) int { return len(s) },
+			want: "a",
+			ok:   true,
+		},
+		{
+			name: "single value",
+			seq:  seq.Yield("test"),
+			f:    func(s string) int { return len(s) },
+			want: "test",
+			ok:   true,
+		},
+		{
+			name: "empty sequence",
+			seq:  seq.Yield[string](),
+			f:    func(s string) int { return len(s) },
+			want: "",
+			ok:   false,
+		},
+		{
+			name: "same key values",
+			seq:  seq.Yield("aa", "bb", "cc"),
+			f:    func(s string) int { return len(s) },
+			want: "aa", // first occurrence is kept
+			ok:   true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, ok := seq.MinBy(tt.seq, tt.f)
+			assert.Equal(t, tt.want, got)
+			assert.Equal(t, tt.ok, ok)
+		})
+	}
+}
+
+func Test_MinFunc(t *testing.T) {
+	tests := []struct {
+		name string
+		seq  iter.Seq[string]
+		f    func(string, string) int
+		want string
+		ok   bool
+	}{
+		{
+			name: "by length comparison",
+			seq:  seq.Yield("a", "bb", "ccc", "dd"),
+			f:    cmpStringLen,
+			want: "a",
+			ok:   true,
+		},
+		{
+			name: "single value",
+			seq:  seq.Yield("test"),
+			f:    cmpStringLen,
+			want: "test",
+			ok:   true,
+		},
+		{
+			name: "empty sequence",
+			seq:  seq.Yield[string](),
+			f:    cmpStringLen,
+			want: "",
+			ok:   false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, ok := seq.MinFunc(tt.seq, tt.f)
+			assert.Equal(t, tt.want, got)
+			assert.Equal(t, tt.ok, ok)
+		})
+	}
+}
+
+func Test_OfType(t *testing.T) {
+	tests := []struct {
+		name string
+		seq  iter.Seq[any]
+		want []int
+	}{
+		{
+			name: "mixed types",
+			seq:  seq.Yield[any](1, "two", 3, true, 4),
+			want: []int{1, 3, 4},
+		},
+		{
+			name: "all matching",
+			seq:  seq.Yield[any](1, 2, 3),
+			want: []int{1, 2, 3},
+		},
+		{
+			name: "none matching",
+			seq:  seq.Yield[any]("one", "two", "three"),
+			want: nil,
+		},
+		{
+			name: "empty sequence",
+			seq:  seq.Yield[any](),
+			want: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := seq.OfType[any, int](tt.seq)
+			seqtest.AssertEqual(t, tt.want, got)
 		})
 	}
 }
@@ -1185,6 +1551,124 @@ func Test_Skip(t *testing.T) {
 	}
 }
 
+func Test_SkipWhile(t *testing.T) {
+	tests := []struct {
+		name string
+		seq  iter.Seq[int]
+		f    func(int, int) bool
+		want []int
+	}{
+		{
+			name: "skip even numbers",
+			seq:  seq.Yield(2, 4, 3, 6, 8),
+			f: func(i, v int) bool {
+				return v%2 == 0
+			},
+			want: []int{3, 6, 8},
+		},
+		{
+			name: "skip all numbers",
+			seq:  seq.Yield(2, 4, 6, 8),
+			f: func(i, v int) bool {
+				return v%2 == 0
+			},
+			want: nil,
+		},
+		{
+			name: "skip none",
+			seq:  seq.Yield(1, 3, 5, 7),
+			f: func(i, v int) bool {
+				return v%2 == 0
+			},
+			want: []int{1, 3, 5, 7},
+		},
+		{
+			name: "empty sequence",
+			seq:  seq.Yield[int](),
+			f: func(i, v int) bool {
+				return v%2 == 0
+			},
+			want: nil,
+		},
+		{
+			name: "skip based on index",
+			seq:  seq.Yield(1, 2, 3, 4, 5),
+			f: func(i, v int) bool {
+				return i < 2
+			},
+			want: []int{3, 4, 5},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := seq.SkipWhile(tt.seq, tt.f)
+			seqtest.AssertEqual(t, tt.want, got)
+		})
+	}
+}
+
+func Test_Sum(t *testing.T) {
+	tests := []struct {
+		name string
+		seq  iter.Seq[int]
+		want int
+	}{
+		{
+			name: "positive integers",
+			seq:  seq.Yield(1, 2, 3, 4),
+			want: 10,
+		},
+		{
+			name: "mixed signs",
+			seq:  seq.Yield(-2, -1, 0, 1, 2),
+			want: 0,
+		},
+		{
+			name: "single value",
+			seq:  seq.Yield(42),
+			want: 42,
+		},
+		{
+			name: "empty sequence",
+			seq:  seq.Yield[int](),
+			want: 0,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := seq.Sum(tt.seq)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+
+	// Test with float values
+	floatTests := []struct {
+		name string
+		seq  iter.Seq[float64]
+		want float64
+	}{
+		{
+			name: "decimal values",
+			seq:  seq.Yield(1.5, 2.5, 3.5),
+			want: 7.5,
+		},
+		{
+			name: "mixed integers and decimals",
+			seq:  seq.Yield(1.0, 2.0, 3.5, 4.5),
+			want: 11.0,
+		},
+	}
+
+	for _, tt := range floatTests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := seq.Sum(tt.seq)
+			assert.InDelta(t, tt.want, got, 0.000001)
+		})
+	}
+}
+
 func Test_Take(t *testing.T) {
 	tests := []struct {
 		name string
@@ -1227,6 +1711,63 @@ func Test_Take(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := seq.Take(tt.seq, tt.n)
+			seqtest.AssertEqual(t, tt.want, got)
+		})
+	}
+}
+
+func Test_TakeWhile(t *testing.T) {
+	tests := []struct {
+		name string
+		seq  iter.Seq[int]
+		f    func(int, int) bool
+		want []int
+	}{
+		{
+			name: "take even numbers",
+			seq:  seq.Yield(2, 4, 3, 6, 8),
+			f: func(i, v int) bool {
+				return v%2 == 0
+			},
+			want: []int{2, 4},
+		},
+		{
+			name: "take all numbers",
+			seq:  seq.Yield(2, 4, 6, 8),
+			f: func(i, v int) bool {
+				return v%2 == 0
+			},
+			want: []int{2, 4, 6, 8},
+		},
+		{
+			name: "take none",
+			seq:  seq.Yield(1, 3, 5, 7),
+			f: func(i, v int) bool {
+				return v%2 == 0
+			},
+			want: nil,
+		},
+		{
+			name: "empty sequence",
+			seq:  seq.Yield[int](),
+			f: func(i, v int) bool {
+				return v%2 == 0
+			},
+			want: nil,
+		},
+		{
+			name: "take based on index",
+			seq:  seq.Yield(1, 2, 3, 4, 5),
+			f: func(i, v int) bool {
+				return i < 2
+			},
+			want: []int{1, 2},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := seq.TakeWhile(tt.seq, tt.f)
 			seqtest.AssertEqual(t, tt.want, got)
 		})
 	}
@@ -1292,116 +1833,154 @@ func Test_ValueAt(t *testing.T) {
 	})
 }
 
-func Test_SkipWhile(t *testing.T) {
+func Test_Where(t *testing.T) {
 	tests := []struct {
 		name string
 		seq  iter.Seq[int]
-		f    func(int, int) bool
+		f    func(int) bool
 		want []int
 	}{
 		{
-			name: "skip even numbers",
-			seq:  seq.Yield(2, 4, 3, 6, 8),
-			f: func(i, v int) bool {
-				return v%2 == 0
-			},
-			want: []int{3, 6, 8},
+			name: "some matches",
+			seq:  seq.Yield(1, 2, 3, 4, 5, 6),
+			f:    isEven,
+			want: []int{2, 4, 6},
 		},
 		{
-			name: "skip all numbers",
+			name: "all matches",
 			seq:  seq.Yield(2, 4, 6, 8),
-			f: func(i, v int) bool {
-				return v%2 == 0
-			},
-			want: nil,
+			f:    isEven,
+			want: []int{2, 4, 6, 8},
 		},
 		{
-			name: "skip none",
+			name: "no matches",
 			seq:  seq.Yield(1, 3, 5, 7),
-			f: func(i, v int) bool {
-				return v%2 == 0
-			},
-			want: []int{1, 3, 5, 7},
+			f:    isEven,
+			want: nil,
 		},
 		{
 			name: "empty sequence",
 			seq:  seq.Yield[int](),
-			f: func(i, v int) bool {
-				return v%2 == 0
-			},
+			f:    isEven,
 			want: nil,
-		},
-		{
-			name: "skip based on index",
-			seq:  seq.Yield(1, 2, 3, 4, 5),
-			f: func(i, v int) bool {
-				return i < 2
-			},
-			want: []int{3, 4, 5},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := seq.SkipWhile(tt.seq, tt.f)
+			got := seq.Where(tt.seq, tt.f)
 			seqtest.AssertEqual(t, tt.want, got)
 		})
 	}
 }
 
-func Test_TakeWhile(t *testing.T) {
+func Test_Yield(t *testing.T) {
 	tests := []struct {
 		name string
 		seq  iter.Seq[int]
-		f    func(int, int) bool
 		want []int
 	}{
 		{
-			name: "take even numbers",
-			seq:  seq.Yield(2, 4, 3, 6, 8),
-			f: func(i, v int) bool {
-				return v%2 == 0
-			},
-			want: []int{2, 4},
+			name: "multiple values",
+			seq:  seq.Yield(1, 2, 3, 4),
+			want: []int{1, 2, 3, 4},
 		},
 		{
-			name: "take all numbers",
-			seq:  seq.Yield(2, 4, 6, 8),
-			f: func(i, v int) bool {
-				return v%2 == 0
-			},
-			want: []int{2, 4, 6, 8},
+			name: "single value",
+			seq:  seq.Yield(42),
+			want: []int{42},
 		},
 		{
-			name: "take none",
-			seq:  seq.Yield(1, 3, 5, 7),
-			f: func(i, v int) bool {
-				return v%2 == 0
-			},
-			want: nil,
-		},
-		{
-			name: "empty sequence",
+			name: "empty",
 			seq:  seq.Yield[int](),
-			f: func(i, v int) bool {
-				return v%2 == 0
-			},
 			want: nil,
-		},
-		{
-			name: "take based on index",
-			seq:  seq.Yield(1, 2, 3, 4, 5),
-			f: func(i, v int) bool {
-				return i < 2
-			},
-			want: []int{1, 2},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := seq.TakeWhile(tt.seq, tt.f)
-			seqtest.AssertEqual(t, tt.want, got)
+			seqtest.AssertEqual(t, tt.want, tt.seq)
+		})
+	}
+}
+
+func Test_YieldBackwards(t *testing.T) {
+	tests := []struct {
+		name string
+		seq  iter.Seq[int]
+		want []int
+	}{
+		{
+			name: "multiple values",
+			seq:  seq.YieldBackwards(1, 2, 3, 4),
+			want: []int{4, 3, 2, 1},
+		},
+		{
+			name: "single value",
+			seq:  seq.YieldBackwards(42),
+			want: []int{42},
+		},
+		{
+			name: "empty",
+			seq:  seq.YieldBackwards[int](),
+			want: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			seqtest.AssertEqual(t, tt.want, tt.seq)
+		})
+	}
+}
+
+func Test_YieldChan(t *testing.T) {
+	tests := []struct {
+		name string
+		seq  iter.Seq[int]
+		want []int
+	}{
+		{
+			name: "multiple values",
+			seq: func() iter.Seq[int] {
+				ch := make(chan int)
+				go func() {
+					defer close(ch)
+					ch <- 1
+					ch <- 2
+					ch <- 3
+					ch <- 4
+				}()
+				return seq.YieldChan(ch)
+			}(),
+			want: []int{1, 2, 3, 4},
+		},
+		{
+			name: "single value",
+			seq: func() iter.Seq[int] {
+				ch := make(chan int)
+				go func() {
+					defer close(ch)
+					ch <- 42
+				}()
+				return seq.YieldChan(ch)
+			}(),
+			want: []int{42},
+		},
+		{
+			name: "empty",
+			seq: func() iter.Seq[int] {
+				ch := make(chan int)
+				close(ch)
+				return seq.YieldChan(ch)
+			}(),
+			want: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			seqtest.AssertEqual(t, tt.want, tt.seq)
 		})
 	}
 }
