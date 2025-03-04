@@ -1255,3 +1255,117 @@ func Test_ValueAt(t *testing.T) {
 		})
 	})
 }
+
+func Test_SkipWhile(t *testing.T) {
+	tests := []struct {
+		name string
+		seq  iter.Seq[int]
+		f    func(int, int) bool
+		want []int
+	}{
+		{
+			name: "skip even numbers",
+			seq:  seq.Yield(2, 4, 3, 6, 8),
+			f: func(i, v int) bool {
+				return v%2 == 0
+			},
+			want: []int{3, 6, 8},
+		},
+		{
+			name: "skip all numbers",
+			seq:  seq.Yield(2, 4, 6, 8),
+			f: func(i, v int) bool {
+				return v%2 == 0
+			},
+			want: nil,
+		},
+		{
+			name: "skip none",
+			seq:  seq.Yield(1, 3, 5, 7),
+			f: func(i, v int) bool {
+				return v%2 == 0
+			},
+			want: []int{1, 3, 5, 7},
+		},
+		{
+			name: "empty sequence",
+			seq:  seq.Yield[int](),
+			f: func(i, v int) bool {
+				return v%2 == 0
+			},
+			want: nil,
+		},
+		{
+			name: "skip based on index",
+			seq:  seq.Yield(1, 2, 3, 4, 5),
+			f: func(i, v int) bool {
+				return i < 2
+			},
+			want: []int{3, 4, 5},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := seq.SkipWhile(tt.seq, tt.f)
+			seqtest.AssertEqual(t, tt.want, got)
+		})
+	}
+}
+
+func Test_TakeWhile(t *testing.T) {
+	tests := []struct {
+		name string
+		seq  iter.Seq[int]
+		f    func(int, int) bool
+		want []int
+	}{
+		{
+			name: "take even numbers",
+			seq:  seq.Yield(2, 4, 3, 6, 8),
+			f: func(i, v int) bool {
+				return v%2 == 0
+			},
+			want: []int{2, 4},
+		},
+		{
+			name: "take all numbers",
+			seq:  seq.Yield(2, 4, 6, 8),
+			f: func(i, v int) bool {
+				return v%2 == 0
+			},
+			want: []int{2, 4, 6, 8},
+		},
+		{
+			name: "take none",
+			seq:  seq.Yield(1, 3, 5, 7),
+			f: func(i, v int) bool {
+				return v%2 == 0
+			},
+			want: nil,
+		},
+		{
+			name: "empty sequence",
+			seq:  seq.Yield[int](),
+			f: func(i, v int) bool {
+				return v%2 == 0
+			},
+			want: nil,
+		},
+		{
+			name: "take based on index",
+			seq:  seq.Yield(1, 2, 3, 4, 5),
+			f: func(i, v int) bool {
+				return i < 2
+			},
+			want: []int{1, 2},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := seq.TakeWhile(tt.seq, tt.f)
+			seqtest.AssertEqual(t, tt.want, got)
+		})
+	}
+}

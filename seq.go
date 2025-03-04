@@ -575,22 +575,20 @@ func Skip[V any](seq iter.Seq[V], n int) iter.Seq[V] {
 func SkipWhile[V any](seq iter.Seq[V], f func(int, V) bool) iter.Seq[V] {
 	return func(yield func(V) bool) {
 		skip := true
-		i := 0
+		i := -1
 
 		for v := range seq {
-			if skip {
-				if f(i, v) {
-					continue
-				}
+			i++
 
-				skip = false
+			if skip && f(i, v) {
+				continue
 			}
 
 			if !yield(v) {
 				return
 			}
 
-			i++
+			skip = false
 		}
 	}
 }
