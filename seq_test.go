@@ -1055,6 +1055,42 @@ func Test_SelectMany(t *testing.T) {
 	}
 }
 
+func Test_Single(t *testing.T) {
+	tests := []struct {
+		name string
+		seq  iter.Seq[int]
+		want int
+		ok   bool
+	}{
+		{
+			name: "single value",
+			seq:  seq.Yield(42),
+			want: 42,
+			ok:   true,
+		},
+		{
+			name: "multiple values",
+			seq:  seq.Yield(1, 2, 3),
+			want: 0,
+			ok:   false,
+		},
+		{
+			name: "empty sequence",
+			seq:  seq.Yield[int](),
+			want: 0,
+			ok:   false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, ok := seq.Single(tt.seq)
+			assert.Equal(t, tt.want, got)
+			assert.Equal(t, tt.ok, ok)
+		})
+	}
+}
+
 func Test_SingleFunc(t *testing.T) {
 	tests := []struct {
 		name string

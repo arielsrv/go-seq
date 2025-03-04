@@ -528,7 +528,7 @@ func Single[V any](seq iter.Seq[V]) (V, bool) {
 		found = true
 	}
 
-	return first, true
+	return first, found
 }
 
 // SingleFunc returns the only value in a sequence that satisfies a predicate.
