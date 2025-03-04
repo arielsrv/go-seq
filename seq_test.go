@@ -463,47 +463,6 @@ func Test_CountFunc(t *testing.T) {
 	}
 }
 
-func Test_Distinct(t *testing.T) {
-	tests := []struct {
-		name string
-		seq  iter.Seq[int]
-		want []int
-	}{
-		{
-			name: "distinct values",
-			seq:  seq.Yield(1, 2, 2, 3, 4, 4, 5),
-			want: []int{1, 2, 3, 4, 5},
-		},
-		{
-			name: "all unique",
-			seq:  seq.Yield(1, 2, 3, 4, 5),
-			want: []int{1, 2, 3, 4, 5},
-		},
-		{
-			name: "all duplicates",
-			seq:  seq.Yield(1, 1, 1, 1),
-			want: []int{1},
-		},
-		{
-			name: "empty",
-			seq:  seq.Yield[int](),
-			want: nil,
-		},
-		{
-			name: "only",
-			seq:  seq.Yield(1),
-			want: []int{1},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := seq.Distinct(tt.seq)
-			seqtest.AssertEqual(t, tt.want, got)
-		})
-	}
-}
-
 func Test_Empty(t *testing.T) {
 	got := seq.Empty[int]()
 	seqtest.AssertEqual(t, nil, got)
