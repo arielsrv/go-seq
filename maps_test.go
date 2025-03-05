@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/sectrean/go-seq"
+	"github.com/sectrean/go-seq/internal/seqtest"
+	"github.com/sectrean/go-seq/internal/testtypes"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -146,6 +148,143 @@ func Test_Grouped(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			result := seq.Grouped(tt.seq)
 			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func Test_Join(t *testing.T) {
+	tests := []struct {
+		name     string
+		posts    iter.Seq[*testtypes.Post]
+		users    map[int]*testtypes.User
+		expected []*testtypes.UserPost
+	}{
+		{
+			name: "matching users",
+			posts: seq.Yield(
+				&testtypes.Post{ID: 1, UserID: 1, Title: "Post 1", Body: "Body 1"},
+				&testtypes.Post{ID: 2, UserID: 2, Title: "Post 2", Body: "Body 2"},
+			),
+			users: map[int]*testtypes.User{
+				1: {ID: 1, Name: "User 1"},
+				2: {ID: 2, Name: "User 2"},
+			},
+			expected: []*testtypes.UserPost{
+				{UserName: "User 1", Body: "Body 1", Title: "Post 1"},
+				{UserName: "User 2", Body: "Body 2", Title: "Post 2"},
+			},
+		},
+		{
+			name: "non-matching users",
+			posts: seq.Yield(
+				&testtypes.Post{ID: 1, UserID: 3, Title: "Post 1", Body: "Body 1"},
+			),
+			users: map[int]*testtypes.User{
+				1: {ID: 1, Name: "User 1"},
+				2: {ID: 2, Name: "User 2"},
+			},
+			expected: nil,
+		},
+		{
+			name:  "empty posts",
+			posts: seq.Empty[*testtypes.Post](),
+			users: map[int]*testtypes.User{
+				1: {ID: 1, Name: "User 1"},
+			},
+			expected: nil,
+		},
+		{
+			name: "empty users",
+			posts: seq.Yield(
+				&testtypes.Post{ID: 1, UserID: 1, Title: "Post 1", Body: "Body 1"},
+			),
+			users:    map[int]*testtypes.User{},
+			expected: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := seq.Join(tt.posts, tt.users,
+				func(p *testtypes.Post) int { return p.UserID },
+				func(p *testtypes.Post, u *testtypes.User) *testtypes.UserPost {
+					return &testtypes.UserPost{UserName: u.Name, Body: p.Body, Title: p.Title}
+				},
+			)
+			seqtest.AssertEqual(t, tt.expected, result)
+		})
+	}
+}
+
+func Test_OuterJoin(t *testing.T) {
+	tests := []struct {
+		name     string
+		posts    iter.Seq[*testtypes.Post]
+		users    map[int]*testtypes.User
+		expected []*testtypes.UserPost
+	}{
+		{
+			name: "matching users",
+			posts: seq.Yield(
+				&testtypes.Post{ID: 1, UserID: 1, Title: "Post 1", Body: "Body 1"},
+				&testtypes.Post{ID: 2, UserID: 2, Title: "Post 2", Body: "Body 2"},
+			),
+			users: map[int]*testtypes.User{
+				1: {ID: 1, Name: "User 1"},
+				2: {ID: 2, Name: "User 2"},
+			},
+			expected: []*testtypes.UserPost{
+				{UserName: "User 1", Body: "Body 1", Title: "Post 1"},
+				{UserName: "User 2", Body: "Body 2", Title: "Post 2"},
+			},
+		},
+		{
+			name: "non-matching users",
+			posts: seq.Yield(
+				&testtypes.Post{ID: 1, UserID: 3, Title: "Post 1", Body: "Body 1"},
+			),
+			users: map[int]*testtypes.User{
+				1: {ID: 1, Name: "User 1"},
+				2: {ID: 2, Name: "User 2"},
+			},
+			expected: []*testtypes.UserPost{
+				{UserName: "[Unknown]", Body: "Body 1", Title: "Post 1"},
+			},
+		},
+		{
+			name:  "empty posts",
+			posts: seq.Empty[*testtypes.Post](),
+			users: map[int]*testtypes.User{
+				1: {ID: 1, Name: "User 1"},
+			},
+			expected: nil,
+		},
+		{
+			name: "empty users",
+			posts: seq.Yield(
+				&testtypes.Post{ID: 1, UserID: 1, Title: "Post 1", Body: "Body 1"},
+			),
+			users: map[int]*testtypes.User{},
+			expected: []*testtypes.UserPost{
+				{UserName: "[Unknown]", Body: "Body 1", Title: "Post 1"},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := seq.OuterJoin(tt.posts, tt.users,
+				func(p *testtypes.Post) int { return p.UserID },
+				func(p *testtypes.Post, u *testtypes.User, found bool) *testtypes.UserPost {
+					username := "[Unknown]"
+					if found {
+						username = u.Name
+					}
+
+					return &testtypes.UserPost{UserName: username, Body: p.Body, Title: p.Title}
+				},
+			)
+			seqtest.AssertEqual(t, tt.expected, result)
 		})
 	}
 }
