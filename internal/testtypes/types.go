@@ -1,15 +1,15 @@
 package testtypes
 
 type User struct {
-	ID   int
 	Name string
+	ID   int
 }
 
 type Post struct {
-	ID     int
-	UserID int
 	Title  string
 	Body   string
+	ID     int
+	UserID int
 }
 
 type UserPost struct {
