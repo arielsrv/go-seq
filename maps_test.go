@@ -4,9 +4,9 @@ import (
 	"iter"
 	"testing"
 
-	"github.com/sectrean/go-seq"
-	"github.com/sectrean/go-seq/internal/seqtest"
-	"github.com/sectrean/go-seq/internal/testtypes"
+	"github.com/arielsrv/go-seq"
+	"github.com/arielsrv/go-seq/internal/seqtest"
+	"github.com/arielsrv/go-seq/internal/testtypes"
 	"github.com/stretchr/testify/assert"
 )
 

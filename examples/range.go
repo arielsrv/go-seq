@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/sectrean/go-seq"
+	"github.com/arielsrv/go-seq"
 )
 
 func Range_Examples() {

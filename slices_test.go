@@ -4,7 +4,7 @@ import (
 	"iter"
 	"testing"
 
-	"github.com/sectrean/go-seq"
+	"github.com/arielsrv/go-seq"
 	"github.com/stretchr/testify/assert"
 )
 

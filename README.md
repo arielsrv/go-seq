@@ -1,6 +1,6 @@
 # go-seq
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/sectrean/go-seq.svg)](https://pkg.go.dev/github.com/sectrean/go-seq)
+[![Go Reference](https://pkg.go.dev/badge/github.com/arielsrv/go-seq.svg)](https://pkg.go.dev/github.com/arielsrv/go-seq)
 
 
 **go-seq** (pronounced "go seek") is a Go package for working with *seq*uences.
@@ -10,5 +10,5 @@ Go 1.23 introduced [iterators](https://go.dev/doc/go1.23#iterators) and the [`it
 ## Install
 
 ```
-go get github.com/sectrean/go-seq
+go get github.com/arielsrv/go-seq
 ```

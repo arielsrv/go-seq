@@ -1,4 +1,4 @@
-module github.com/sectrean/go-seq
+module github.com/arielsrv/go-seq
 
 go 1.24
 

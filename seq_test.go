@@ -5,8 +5,8 @@ import (
 	"iter"
 	"testing"
 
-	"github.com/sectrean/go-seq"
-	"github.com/sectrean/go-seq/internal/seqtest"
+	"github.com/arielsrv/go-seq"
+	"github.com/arielsrv/go-seq/internal/seqtest"
 	"github.com/stretchr/testify/assert"
 )
 
