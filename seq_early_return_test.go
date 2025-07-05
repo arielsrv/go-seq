@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// limitedCollector collects values from a sequence but stops after a specified limit
+// limitedCollector collects values from a sequence but stops after a specified limit.
 func limitedCollector[T any](seq iter.Seq[T], limit int) []T {
 	result := make([]T, 0)
 	count := 0
@@ -25,7 +25,7 @@ func limitedCollector[T any](seq iter.Seq[T], limit int) []T {
 	return result
 }
 
-// limitedCollector2 collects key-value pairs from a sequence but stops after a specified limit
+// limitedCollector2 collects key-value pairs from a sequence but stops after a specified limit.
 func limitedCollector2[K, V any](seq iter.Seq2[K, V], limit int) []struct {
 	Key   K
 	Value V
@@ -156,7 +156,7 @@ func Test_Keys_EarlyReturn(t *testing.T) {
 		result := limitedCollector(keysSeq, 2)
 
 		// Should only get 2 keys
-		assert.Equal(t, 2, len(result))
+		assert.Len(t, result, 2)
 	})
 }
 
@@ -170,7 +170,7 @@ func Test_Values_EarlyReturn(t *testing.T) {
 		result := limitedCollector(valuesSeq, 2)
 
 		// Should only get 2 values
-		assert.Equal(t, 2, len(result))
+		assert.Len(t, result, 2)
 	})
 }
 
@@ -183,7 +183,7 @@ func Test_YieldKeyValues_EarlyReturn(t *testing.T) {
 		result := limitedCollector2(keyValueSeq, 2)
 
 		// Should only get 2 key-value pairs
-		assert.Equal(t, 2, len(result))
+		assert.Len(t, result, 2)
 	})
 }
 
@@ -196,7 +196,7 @@ func Test_SetValues_EarlyReturn(t *testing.T) {
 		result := limitedCollector(valuesSeq, 3)
 
 		// Should only get 3 values
-		assert.Equal(t, 3, len(result))
+		assert.Len(t, result, 3)
 	})
 }
 
@@ -261,7 +261,7 @@ func Test_SelectKeys_EarlyReturn(t *testing.T) {
 		result := limitedCollector2(keyValueSeq, 2)
 
 		// Should only get the first 2 key-value pairs
-		assert.Equal(t, 2, len(result))
+		assert.Len(t, result, 2)
 		assert.Equal(t, "key1", result[0].Key)
 		assert.Equal(t, 1, result[0].Value)
 		assert.Equal(t, "key2", result[1].Key)
@@ -310,7 +310,7 @@ func Test_Concat2_EarlyReturn(t *testing.T) {
 		result := limitedCollector2(concatSeq, 3)
 
 		// Should only get 3 key-value pairs
-		assert.Equal(t, 3, len(result))
+		assert.Len(t, result, 3)
 	})
 }
 
@@ -325,7 +325,7 @@ func Test_Select2_EarlyReturn(t *testing.T) {
 		result := limitedCollector2(transformedSeq, 2)
 
 		// Should only get 2 transformed key-value pairs
-		assert.Equal(t, 2, len(result))
+		assert.Len(t, result, 2)
 	})
 }
 
@@ -340,7 +340,7 @@ func Test_SelectValues_EarlyReturn(t *testing.T) {
 		result := limitedCollector(valuesSeq, 2)
 
 		// Should only get 2 transformed values
-		assert.Equal(t, 2, len(result))
+		assert.Len(t, result, 2)
 	})
 }
 
@@ -355,6 +355,116 @@ func Test_Where2_EarlyReturn(t *testing.T) {
 		result := limitedCollector2(filteredSeq, 1)
 
 		// Should only get 1 filtered key-value pair
-		assert.Equal(t, 1, len(result))
+		assert.Len(t, result, 1)
+	})
+}
+
+func Test_Chunk_EarlyReturn(t *testing.T) {
+	t.Run("early return", func(t *testing.T) {
+		numbers := seq.Yield(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+		chunks := seq.Chunk(numbers, 3)
+
+		// Only collect the first 2 chunks
+		result := limitedCollector(chunks, 2)
+
+		// Should only get the first 2 chunks
+		assert.Len(t, result, 2)
+		assert.Equal(t, []int{1, 2, 3}, result[0])
+		assert.Equal(t, []int{4, 5, 6}, result[1])
+	})
+}
+
+func Test_Range_EarlyReturn(t *testing.T) {
+	t.Run("ascending range early return", func(t *testing.T) {
+		rangeSeq, _ := seq.Range(1, 10, 1)
+
+		// Only collect the first 3 items
+		result := limitedCollector(rangeSeq, 3)
+
+		// Should only get the first 3 items
+		assert.Equal(t, []int{1, 2, 3}, result)
+	})
+
+	t.Run("descending range early return", func(t *testing.T) {
+		rangeSeq, _ := seq.Range(10, 1, -1)
+
+		// Only collect the first 3 items
+		result := limitedCollector(rangeSeq, 3)
+
+		// Should only get the first 3 items
+		assert.Equal(t, []int{10, 9, 8}, result)
+	})
+}
+
+func Test_Skip_EarlyReturn(t *testing.T) {
+	t.Run("early return", func(t *testing.T) {
+		numbers := seq.Yield(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+		skipped := seq.Skip(numbers, 3)
+
+		// Only collect the first 2 items
+		result := limitedCollector(skipped, 2)
+
+		// Should only get the first 2 items after skipping 3
+		assert.Equal(t, []int{4, 5}, result)
+	})
+}
+
+func Test_SkipWhile_EarlyReturn(t *testing.T) {
+	t.Run("early return", func(t *testing.T) {
+		numbers := seq.Yield(2, 4, 6, 7, 8, 9, 10)
+		skipped := seq.SkipWhile(numbers, func(i, v int) bool {
+			return v%2 == 0
+		})
+
+		// Only collect the first 2 items
+		result := limitedCollector(skipped, 2)
+
+		// Should only get the first 2 items after skipping even numbers
+		assert.Equal(t, []int{7, 8}, result)
+	})
+}
+
+func Test_Take_EarlyReturn(t *testing.T) {
+	t.Run("early return", func(t *testing.T) {
+		numbers := seq.Yield(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+		taken := seq.Take(numbers, 5)
+
+		// Only collect the first 3 items
+		result := limitedCollector(taken, 3)
+
+		// Should only get the first 3 items
+		assert.Equal(t, []int{1, 2, 3}, result)
+	})
+}
+
+func Test_TakeWhile_EarlyReturn(t *testing.T) {
+	t.Run("early return", func(t *testing.T) {
+		numbers := seq.Yield(2, 4, 6, 7, 8, 10)
+		taken := seq.TakeWhile(numbers, func(i, v int) bool {
+			return v%2 == 0
+		})
+
+		// Only collect the first 2 items
+		result := limitedCollector(taken, 2)
+
+		// Should only get the first 2 even numbers
+		assert.Equal(t, []int{2, 4}, result)
+	})
+}
+
+func Test_WithIndex_EarlyReturn(t *testing.T) {
+	t.Run("early return", func(t *testing.T) {
+		values := seq.Yield("a", "b", "c", "d", "e")
+		indexed := seq.WithIndex(values)
+
+		// Only collect the first 2 key-value pairs
+		result := limitedCollector2(indexed, 2)
+
+		// Should only get the first 2 indexed values
+		assert.Len(t, result, 2)
+		assert.Equal(t, 0, result[0].Key)
+		assert.Equal(t, "a", result[0].Value)
+		assert.Equal(t, 1, result[1].Key)
+		assert.Equal(t, "b", result[1].Value)
 	})
 }
