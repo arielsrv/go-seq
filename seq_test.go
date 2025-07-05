@@ -225,6 +225,21 @@ func Test_Append(t *testing.T) {
 	}
 }
 
+func Test_Append_EdgeCases(t *testing.T) {
+	t.Run("append to empty sequence", func(t *testing.T) {
+		got := seq.Append(seq.Empty[int](), 1, 2)
+		seqtest.AssertEqual(t, []int{1, 2}, got)
+	})
+	t.Run("append single value", func(t *testing.T) {
+		got := seq.Append(seq.Yield(1, 2), 3)
+		seqtest.AssertEqual(t, []int{1, 2, 3}, got)
+	})
+	t.Run("append multiple values to empty", func(t *testing.T) {
+		got := seq.Append(seq.Empty[int](), 1, 2, 3, 4, 5)
+		seqtest.AssertEqual(t, []int{1, 2, 3, 4, 5}, got)
+	})
+}
+
 func Test_Average(t *testing.T) {
 	tests := []struct {
 		name string
@@ -1087,6 +1102,21 @@ func Test_Prepend(t *testing.T) {
 	}
 }
 
+func Test_Prepend_EdgeCases(t *testing.T) {
+	t.Run("prepend to empty sequence", func(t *testing.T) {
+		got := seq.Prepend(seq.Empty[int](), 1, 2)
+		seqtest.AssertEqual(t, []int{1, 2}, got)
+	})
+	t.Run("prepend single value", func(t *testing.T) {
+		got := seq.Prepend(seq.Yield(2, 3), 1)
+		seqtest.AssertEqual(t, []int{1, 2, 3}, got)
+	})
+	t.Run("prepend multiple values to empty", func(t *testing.T) {
+		got := seq.Prepend(seq.Empty[int](), 1, 2, 3, 4, 5)
+		seqtest.AssertEqual(t, []int{1, 2, 3, 4, 5}, got)
+	})
+}
+
 func Test_Range(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -1280,6 +1310,25 @@ func Test_Repeat(t *testing.T) {
 			seqtest.AssertEqual(t, tt.want, got)
 		})
 	}
+}
+
+func Test_Repeat_EdgeCases(t *testing.T) {
+	t.Run("repeat zero times", func(t *testing.T) {
+		got := seq.Repeat(42, 0)
+		seqtest.AssertEqual(t, nil, got)
+	})
+	t.Run("repeat negative times", func(t *testing.T) {
+		got := seq.Repeat(42, -5)
+		seqtest.AssertEqual(t, nil, got)
+	})
+	t.Run("repeat large count", func(t *testing.T) {
+		got := seq.Repeat(7, 10)
+		expected := make([]int, 10)
+		for i := range expected {
+			expected[i] = 7
+		}
+		seqtest.AssertEqual(t, expected, got)
+	})
 }
 
 func Test_Select(t *testing.T) {
@@ -1933,6 +1982,18 @@ func Test_YieldBackwards(t *testing.T) {
 	}
 }
 
+func Test_YieldBackwards_EdgeCases(t *testing.T) {
+	t.Run("yield backwards nil", func(t *testing.T) {
+		var nilVals []int
+		got := seq.YieldBackwards(nilVals...)
+		seqtest.AssertEqual(t, nil, got)
+	})
+	t.Run("yield backwards large sequence", func(t *testing.T) {
+		got := seq.YieldBackwards(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+		seqtest.AssertEqual(t, []int{10, 9, 8, 7, 6, 5, 4, 3, 2, 1}, got)
+	})
+}
+
 func Test_YieldChan(t *testing.T) {
 	tests := []struct {
 		name string
@@ -2005,4 +2066,16 @@ func Test_YieldChan(t *testing.T) {
 			seqtest.AssertEqual(t, tt.want, tt.seq)
 		})
 	}
+}
+
+func Test_YieldChan_EdgeCases(t *testing.T) {
+	t.Run("yield chan with buffer", func(t *testing.T) {
+		ch := make(chan int, 3)
+		ch <- 1
+		ch <- 2
+		ch <- 3
+		close(ch)
+		got := seq.YieldChan(ch)
+		seqtest.AssertEqual(t, []int{1, 2, 3}, got)
+	})
 }

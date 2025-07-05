@@ -139,6 +139,19 @@ func Test_Keys(t *testing.T) {
 	}
 }
 
+func Test_Keys_EdgeCases(t *testing.T) {
+	t.Run("keys with large sequence", func(t *testing.T) {
+		seq2 := seq.Zip(seq.Yield("a", "b", "c", "d", "e"), seq.Yield(1, 2, 3, 4, 5))
+		got := seq.Keys(seq2)
+		seqtest.AssertEqual(t, []string{"a", "b", "c", "d", "e"}, got)
+	})
+	t.Run("keys with duplicate keys", func(t *testing.T) {
+		seq2 := seq.Zip(seq.Yield("a", "a", "b"), seq.Yield(1, 2, 3))
+		got := seq.Keys(seq2)
+		seqtest.AssertEqual(t, []string{"a", "a", "b"}, got)
+	})
+}
+
 func Test_Select2(t *testing.T) {
 	tests := []struct {
 		name string
@@ -340,6 +353,19 @@ func Test_Values(t *testing.T) {
 	}
 }
 
+func Test_Values_EdgeCases(t *testing.T) {
+	t.Run("values with large sequence", func(t *testing.T) {
+		seq2 := seq.Zip(seq.Yield("a", "b", "c", "d", "e"), seq.Yield(1, 2, 3, 4, 5))
+		got := seq.Values(seq2)
+		seqtest.AssertEqual(t, []int{1, 2, 3, 4, 5}, got)
+	})
+	t.Run("values with duplicate keys", func(t *testing.T) {
+		seq2 := seq.Zip(seq.Yield("a", "a", "b"), seq.Yield(1, 2, 3))
+		got := seq.Values(seq2)
+		seqtest.AssertEqual(t, []int{1, 2, 3}, got)
+	})
+}
+
 func Test_YieldKeyValues(t *testing.T) {
 	tests := []struct {
 		name string
@@ -391,6 +417,25 @@ func Test_YieldKeyValues(t *testing.T) {
 			seqtest.AssertElementsMatch2(t, tt.want, got)
 		})
 	}
+}
+
+func Test_YieldKeyValues_EdgeCases(t *testing.T) {
+	t.Run("yield key values with large map", func(t *testing.T) {
+		m := map[string]int{"a": 1, "b": 2, "c": 3, "d": 4, "e": 5}
+		got := seq.YieldKeyValues(m)
+		seqtest.AssertElementsMatch2(t, []seqtest.KeyValuePair[string, int]{
+			{Key: "a", Value: 1},
+			{Key: "b", Value: 2},
+			{Key: "c", Value: 3},
+			{Key: "d", Value: 4},
+			{Key: "e", Value: 5},
+		}, got)
+	})
+	t.Run("yield key values with nil map", func(t *testing.T) {
+		var m map[string]int
+		got := seq.YieldKeyValues(m)
+		seqtest.AssertEqual2(t, nil, got)
+	})
 }
 
 func Test_Zip(t *testing.T) {

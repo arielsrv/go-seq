@@ -216,6 +216,33 @@ func Test_Join(t *testing.T) {
 	}
 }
 
+func Test_Join_EdgeCases(t *testing.T) {
+	t.Run("join with empty map", func(t *testing.T) {
+		posts := seq.Yield(
+			&testtypes.Post{ID: 1, UserID: 1, Title: "Post 1", Body: "Body 1"},
+		)
+		users := map[int]*testtypes.User{}
+		got := seq.Join(posts, users,
+			func(p *testtypes.Post) int { return p.UserID },
+			func(p *testtypes.Post, u *testtypes.User) *testtypes.UserPost {
+				return &testtypes.UserPost{UserName: u.Name, Body: p.Body, Title: p.Title}
+			})
+		seqtest.AssertEqual(t, nil, got)
+	})
+	t.Run("join with nil map", func(t *testing.T) {
+		posts := seq.Yield(
+			&testtypes.Post{ID: 1, UserID: 1, Title: "Post 1", Body: "Body 1"},
+		)
+		var users map[int]*testtypes.User
+		got := seq.Join(posts, users,
+			func(p *testtypes.Post) int { return p.UserID },
+			func(p *testtypes.Post, u *testtypes.User) *testtypes.UserPost {
+				return &testtypes.UserPost{UserName: u.Name, Body: p.Body, Title: p.Title}
+			})
+		seqtest.AssertEqual(t, nil, got)
+	})
+}
+
 func Test_OuterJoin(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -287,6 +314,45 @@ func Test_OuterJoin(t *testing.T) {
 			seqtest.AssertEqual(t, tt.expected, result)
 		})
 	}
+}
+
+func Test_OuterJoin_EdgeCases(t *testing.T) {
+	t.Run("outer join with empty map", func(t *testing.T) {
+		posts := seq.Yield(
+			&testtypes.Post{ID: 1, UserID: 1, Title: "Post 1", Body: "Body 1"},
+		)
+		users := map[int]*testtypes.User{}
+		got := seq.OuterJoin(posts, users,
+			func(p *testtypes.Post) int { return p.UserID },
+			func(p *testtypes.Post, u *testtypes.User, found bool) *testtypes.UserPost {
+				if found {
+					return &testtypes.UserPost{UserName: u.Name, Body: p.Body, Title: p.Title}
+				}
+				return &testtypes.UserPost{UserName: "Unknown", Body: p.Body, Title: p.Title}
+			})
+		expected := []*testtypes.UserPost{
+			{UserName: "Unknown", Body: "Body 1", Title: "Post 1"},
+		}
+		seqtest.AssertEqual(t, expected, got)
+	})
+	t.Run("outer join with nil map", func(t *testing.T) {
+		posts := seq.Yield(
+			&testtypes.Post{ID: 1, UserID: 1, Title: "Post 1", Body: "Body 1"},
+		)
+		var users map[int]*testtypes.User
+		got := seq.OuterJoin(posts, users,
+			func(p *testtypes.Post) int { return p.UserID },
+			func(p *testtypes.Post, u *testtypes.User, found bool) *testtypes.UserPost {
+				if found {
+					return &testtypes.UserPost{UserName: u.Name, Body: p.Body, Title: p.Title}
+				}
+				return &testtypes.UserPost{UserName: "Unknown", Body: p.Body, Title: p.Title}
+			})
+		expected := []*testtypes.UserPost{
+			{UserName: "Unknown", Body: "Body 1", Title: "Post 1"},
+		}
+		seqtest.AssertEqual(t, expected, got)
+	})
 }
 
 func Test_CollectMap(t *testing.T) {
