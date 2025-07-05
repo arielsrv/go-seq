@@ -5,7 +5,7 @@ import (
 	"errors"
 	"iter"
 
-	"golang.org/x/exp/constraints"
+	"golang.org/x/exp/constraints" //nolint:exptostd // Integer and Float constraints are not available in std
 )
 
 // Aggregate applies an accumulator function over a sequence.
