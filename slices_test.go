@@ -10,10 +10,10 @@ import (
 
 func Test_CollectLast(t *testing.T) {
 	tests := []struct {
-		name string
 		seq  iter.Seq[int]
-		n    int
+		name string
 		want []int
+		n    int
 	}{
 		{
 			name: "n < len",

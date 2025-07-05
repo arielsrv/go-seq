@@ -725,3 +725,36 @@ func YieldChan[V any](ch <-chan V) iter.Seq[V] {
 		}
 	}
 }
+
+// ToSlice converts a sequence to a slice.
+//
+// This iterates over the entire sequence to collect all values.
+// Use with caution for very large sequences as it loads all values into memory.
+func ToSlice[V any](seq iter.Seq[V]) []V {
+	if seq == nil {
+		return make([]V, 0)
+	}
+
+	result := make([]V, 0)
+	for v := range seq {
+		result = append(result, v)
+	}
+	return result
+}
+
+// ToMap converts a sequence of key-value pairs to a map.
+//
+// This iterates over the entire sequence to collect all key-value pairs.
+// Use with caution for very large sequences as it loads all values into memory.
+// If the sequence contains duplicate keys, later values will overwrite earlier ones.
+func ToMap[K comparable, V any](seq iter.Seq2[K, V]) map[K]V {
+	if seq == nil {
+		return make(map[K]V)
+	}
+
+	result := make(map[K]V)
+	for k, v := range seq {
+		result[k] = v
+	}
+	return result
+}

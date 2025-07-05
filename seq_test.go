@@ -2079,3 +2079,144 @@ func Test_YieldChan_EdgeCases(t *testing.T) {
 		seqtest.AssertEqual(t, []int{1, 2, 3}, got)
 	})
 }
+
+func Test_ToSlice(t *testing.T) {
+	tests := []struct {
+		name string
+		seq  iter.Seq[int]
+		want []int
+	}{
+		{
+			name: "multiple values",
+			seq:  seq.Yield(1, 2, 3, 4, 5),
+			want: []int{1, 2, 3, 4, 5},
+		},
+		{
+			name: "single value",
+			seq:  seq.Yield(42),
+			want: []int{42},
+		},
+		{
+			name: "empty sequence",
+			seq:  seq.Yield[int](),
+			want: []int{},
+		},
+		{
+			name: "filtered sequence",
+			seq:  seq.Where(seq.Yield(1, 2, 3, 4, 5), isEven),
+			want: []int{2, 4},
+		},
+		{
+			name: "transformed sequence",
+			seq:  seq.Select(seq.Yield(1, 2, 3), func(x int) int { return x * 2 }),
+			want: []int{2, 4, 6},
+		},
+		{
+			name: "flattened sequence",
+			seq:  seq.SelectMany(seq.Yield(1, 2), func(x int) iter.Seq[int] { return seq.Yield(x, x*10) }),
+			want: []int{1, 10, 2, 20},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := seq.ToSlice(tt.seq)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func Test_ToSlice_EdgeCases(t *testing.T) {
+	t.Run("nil sequence", func(t *testing.T) {
+		var s iter.Seq[int]
+		got := seq.ToSlice(s)
+		assert.Equal(t, []int{}, got)
+	})
+
+	t.Run("large sequence", func(t *testing.T) {
+		s := seq.Yield(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+		got := seq.ToSlice(s)
+		assert.Equal(t, []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, got)
+	})
+
+	t.Run("string sequence", func(t *testing.T) {
+		s := seq.Yield("a", "b", "c")
+		got := seq.ToSlice(s)
+		assert.Equal(t, []string{"a", "b", "c"}, got)
+	})
+}
+
+func Test_ToMap(t *testing.T) {
+	tests := []struct {
+		name string
+		seq  iter.Seq2[string, int]
+		want map[string]int
+	}{
+		{
+			name: "multiple key-value pairs",
+			seq:  seq.SelectKeys(seq.Yield(1, 2, 3), toString),
+			want: map[string]int{"1": 1, "2": 2, "3": 3},
+		},
+		{
+			name: "single key-value pair",
+			seq:  seq.SelectKeys(seq.Yield(42), toString),
+			want: map[string]int{"42": 42},
+		},
+		{
+			name: "empty sequence",
+			seq:  seq.SelectKeys(seq.Yield[int](), toString),
+			want: map[string]int{},
+		},
+		{
+			name: "duplicate keys (last wins)",
+			seq: func() iter.Seq2[string, int] {
+				return seq.SelectKeys(seq.Yield(1, 2, 1), toString)
+			}(),
+			want: map[string]int{"1": 1, "2": 2},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := seq.ToMap(tt.seq)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func Test_ToMap_EdgeCases(t *testing.T) {
+	t.Run("nil sequence", func(t *testing.T) {
+		var s iter.Seq2[string, int]
+		got := seq.ToMap(s)
+		assert.Equal(t, map[string]int{}, got)
+	})
+
+	t.Run("large sequence", func(t *testing.T) {
+		s := seq.SelectKeys(seq.Yield(1, 2, 3, 4, 5), toString)
+		got := seq.ToMap(s)
+		expected := map[string]int{"1": 1, "2": 2, "3": 3, "4": 4, "5": 5}
+		assert.Equal(t, expected, got)
+	})
+
+	t.Run("complex key-value types", func(t *testing.T) {
+		type Person struct {
+			Name string
+			Age  int
+		}
+		people := []Person{{"Alice", 30}, {"Bob", 25}}
+		s := seq.SelectKeys(seq.Yield(people...), func(p Person) string { return p.Name })
+		got := seq.ToMap(s)
+		expected := map[string]Person{"Alice": {"Alice", 30}, "Bob": {"Bob", 25}}
+		assert.Equal(t, expected, got)
+	})
+
+	t.Run("duplicate keys behavior", func(t *testing.T) {
+		s := seq.SelectKeys(seq.Yield(1, 2, 1, 3, 1), toString)
+		got := seq.ToMap(s)
+		// Should only have 3 entries since "1" appears 3 times but map keys are unique
+		assert.Len(t, got, 3)
+		assert.Equal(t, 1, got["1"]) // Last value wins
+		assert.Equal(t, 2, got["2"])
+		assert.Equal(t, 3, got["3"])
+	})
+}

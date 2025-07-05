@@ -404,11 +404,11 @@ func Test_UnionKeys(t *testing.T) {
 
 func Test_Set_Remove(t *testing.T) {
 	tests := []struct {
-		name     string
 		set      seq.Set[int]
+		result   seq.Set[int]
+		name     string
 		value    int
 		expected bool
-		result   seq.Set[int]
 	}{
 		{
 			name:     "remove existing value",
@@ -483,9 +483,9 @@ func Test_Set_Values(t *testing.T) {
 
 func Test_CollectSet(t *testing.T) {
 	tests := []struct {
-		name     string
 		seq      iter.Seq[int]
 		expected seq.Set[int]
+		name     string
 	}{
 		{
 			name:     "normal sequence",
