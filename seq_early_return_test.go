@@ -2,6 +2,7 @@ package seq_test
 
 import (
 	"iter"
+	"strconv"
 	"testing"
 
 	"github.com/arielsrv/go-seq"
@@ -196,5 +197,164 @@ func Test_SetValues_EarlyReturn(t *testing.T) {
 
 		// Should only get 3 values
 		assert.Equal(t, 3, len(result))
+	})
+}
+
+func Test_Concat_EarlyReturn(t *testing.T) {
+	t.Run("early return", func(t *testing.T) {
+		seq1 := seq.Yield(1, 2, 3)
+		seq2 := seq.Yield(4, 5, 6)
+		seq3 := seq.Yield(7, 8, 9)
+
+		concatSeq := seq.Concat(seq1, seq2, seq3)
+
+		// Only collect the first 4 items
+		result := limitedCollector(concatSeq, 4)
+
+		// Should get all items from seq1 and first item from seq2
+		assert.Equal(t, []int{1, 2, 3, 4}, result)
+	})
+}
+
+func Test_OfType_EarlyReturn(t *testing.T) {
+	t.Run("early return", func(t *testing.T) {
+		// Create a slice with mixed types
+		mixedSlice := []any{1, "string", 2, 3.14, 4}
+
+		// Create a sequence from the slice
+		mixedSeq := seq.Yield(mixedSlice...)
+
+		// Get only int values
+		intSeq := seq.OfType[any, int](mixedSeq)
+
+		// Only collect the first 2 items
+		result := limitedCollector(intSeq, 2)
+
+		// Should only get the first 2 int values
+		assert.Equal(t, []int{1, 2}, result)
+	})
+}
+
+func Test_Select_EarlyReturn(t *testing.T) {
+	t.Run("early return", func(t *testing.T) {
+		numbers := seq.Yield(1, 2, 3, 4, 5)
+		doubled := seq.Select(numbers, func(n int) int {
+			return n * 2
+		})
+
+		// Only collect the first 3 items
+		result := limitedCollector(doubled, 3)
+
+		// Should only get the first 3 doubled values
+		assert.Equal(t, []int{2, 4, 6}, result)
+	})
+}
+
+func Test_SelectKeys_EarlyReturn(t *testing.T) {
+	t.Run("early return", func(t *testing.T) {
+		numbers := seq.Yield(1, 2, 3, 4, 5)
+		keyValueSeq := seq.SelectKeys(numbers, func(n int) string {
+			return "key" + strconv.Itoa(n)
+		})
+
+		// Only collect the first 2 key-value pairs
+		result := limitedCollector2(keyValueSeq, 2)
+
+		// Should only get the first 2 key-value pairs
+		assert.Equal(t, 2, len(result))
+		assert.Equal(t, "key1", result[0].Key)
+		assert.Equal(t, 1, result[0].Value)
+		assert.Equal(t, "key2", result[1].Key)
+		assert.Equal(t, 2, result[1].Value)
+	})
+}
+
+func Test_SelectMany_EarlyReturn(t *testing.T) {
+	t.Run("early return", func(t *testing.T) {
+		numbers := seq.Yield(1, 2, 3)
+		expanded := seq.SelectMany(numbers, func(n int) iter.Seq[int] {
+			return seq.Yield(n, n*10, n*100)
+		})
+
+		// Only collect the first 5 items
+		result := limitedCollector(expanded, 5)
+
+		// Should only get the first 5 expanded values
+		assert.Equal(t, []int{1, 10, 100, 2, 20}, result)
+	})
+}
+
+func Test_Where_EarlyReturn(t *testing.T) {
+	t.Run("early return", func(t *testing.T) {
+		numbers := seq.Yield(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+		evens := seq.Where(numbers, func(n int) bool {
+			return n%2 == 0
+		})
+
+		// Only collect the first 2 items
+		result := limitedCollector(evens, 2)
+
+		// Should only get the first 2 even values
+		assert.Equal(t, []int{2, 4}, result)
+	})
+}
+
+func Test_Concat2_EarlyReturn(t *testing.T) {
+	t.Run("early return", func(t *testing.T) {
+		seq1 := seq.YieldKeyValues(map[string]int{"a": 1, "b": 2})
+		seq2 := seq.YieldKeyValues(map[string]int{"c": 3, "d": 4})
+
+		concatSeq := seq.Concat2(seq1, seq2)
+
+		// Only collect the first 3 key-value pairs
+		result := limitedCollector2(concatSeq, 3)
+
+		// Should only get 3 key-value pairs
+		assert.Equal(t, 3, len(result))
+	})
+}
+
+func Test_Select2_EarlyReturn(t *testing.T) {
+	t.Run("early return", func(t *testing.T) {
+		keyValueSeq := seq.YieldKeyValues(map[string]int{"a": 1, "b": 2, "c": 3})
+		transformedSeq := seq.Select2(keyValueSeq, func(k string, v int) (string, string) {
+			return k + "_key", "value_" + strconv.Itoa(v)
+		})
+
+		// Only collect the first 2 key-value pairs
+		result := limitedCollector2(transformedSeq, 2)
+
+		// Should only get 2 transformed key-value pairs
+		assert.Equal(t, 2, len(result))
+	})
+}
+
+func Test_SelectValues_EarlyReturn(t *testing.T) {
+	t.Run("early return", func(t *testing.T) {
+		keyValueSeq := seq.YieldKeyValues(map[string]int{"a": 1, "b": 2, "c": 3, "d": 4})
+		valuesSeq := seq.SelectValues(keyValueSeq, func(k string, v int) string {
+			return k + "_" + strconv.Itoa(v)
+		})
+
+		// Only collect the first 2 values
+		result := limitedCollector(valuesSeq, 2)
+
+		// Should only get 2 transformed values
+		assert.Equal(t, 2, len(result))
+	})
+}
+
+func Test_Where2_EarlyReturn(t *testing.T) {
+	t.Run("early return", func(t *testing.T) {
+		keyValueSeq := seq.YieldKeyValues(map[string]int{"a": 1, "b": 2, "c": 3, "d": 4, "e": 5})
+		filteredSeq := seq.Where2(keyValueSeq, func(k string, v int) bool {
+			return v%2 == 0
+		})
+
+		// Only collect the first 1 key-value pair
+		result := limitedCollector2(filteredSeq, 1)
+
+		// Should only get 1 filtered key-value pair
+		assert.Equal(t, 1, len(result))
 	})
 }
