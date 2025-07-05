@@ -1,9 +1,8 @@
 package main
 
 import (
-	"testing"
-
 	"iter"
+	"testing"
 
 	"github.com/arielsrv/go-seq"
 	"github.com/arielsrv/go-seq/internal/seqtest"
