@@ -1,7 +1,7 @@
 # go-seq
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/arielsrv/go-seq.svg)](https://pkg.go.dev/github.com/arielsrv/go-seq)
-
+[![codecov](https://codecov.io/gh/arielsrv/go-seq/branch/main/graph/badge.svg)](https://codecov.io/gh/arielsrv/go-seq)
 
 **go-seq** (pronounced "go seek") is a Go package for working with *seq*uences.
 
