@@ -288,3 +288,39 @@ func Test_OuterJoin(t *testing.T) {
 		})
 	}
 }
+
+func Test_CollectMap(t *testing.T) {
+	tests := []struct {
+		name     string
+		seq      iter.Seq2[string, int]
+		expected map[string]int
+	}{
+		{
+			name:     "normal sequence",
+			seq:      seq.Zip(seq.Yield("a", "b", "c"), seq.Yield(1, 2, 3)),
+			expected: map[string]int{"a": 1, "b": 2, "c": 3},
+		},
+		{
+			name:     "duplicate keys",
+			seq:      seq.Zip(seq.Yield("a", "a", "b"), seq.Yield(1, 2, 3)),
+			expected: map[string]int{"a": 2, "b": 3},
+		},
+		{
+			name:     "empty sequence",
+			seq:      seq.Empty2[string, int](),
+			expected: map[string]int{},
+		},
+		{
+			name:     "single element",
+			seq:      seq.Zip(seq.Yield("a"), seq.Yield(1)),
+			expected: map[string]int{"a": 1},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := seq.CollectMap(tt.seq)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}

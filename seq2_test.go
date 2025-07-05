@@ -119,6 +119,16 @@ func Test_Keys(t *testing.T) {
 			seq:  seq.Empty2[string, int](),
 			want: nil,
 		},
+		{
+			name: "large sequence",
+			seq:  seq.Zip(seq.Yield("a", "b", "c", "d", "e"), seq.Yield(1, 2, 3, 4, 5)),
+			want: []string{"a", "b", "c", "d", "e"},
+		},
+		{
+			name: "duplicate keys",
+			seq:  seq.Zip(seq.Yield("a", "a", "b"), seq.Yield(1, 2, 3)),
+			want: []string{"a", "a", "b"},
+		},
 	}
 
 	for _, tt := range tests {
@@ -310,6 +320,16 @@ func Test_Values(t *testing.T) {
 			seq:  seq.Empty2[string, int](),
 			want: nil,
 		},
+		{
+			name: "large sequence",
+			seq:  seq.Zip(seq.Yield("a", "b", "c", "d", "e"), seq.Yield(1, 2, 3, 4, 5)),
+			want: []int{1, 2, 3, 4, 5},
+		},
+		{
+			name: "duplicate keys",
+			seq:  seq.Zip(seq.Yield("a", "a", "b"), seq.Yield(1, 2, 3)),
+			want: []int{1, 2, 3},
+		},
 	}
 
 	for _, tt := range tests {
@@ -345,6 +365,22 @@ func Test_YieldKeyValues(t *testing.T) {
 		{
 			name: "empty map",
 			m:    map[string]int{},
+			want: nil,
+		},
+		{
+			name: "large map",
+			m:    map[string]int{"a": 1, "b": 2, "c": 3, "d": 4, "e": 5},
+			want: []seqtest.KeyValuePair[string, int]{
+				{Key: "a", Value: 1},
+				{Key: "b", Value: 2},
+				{Key: "c", Value: 3},
+				{Key: "d", Value: 4},
+				{Key: "e", Value: 5},
+			},
+		},
+		{
+			name: "nil map",
+			m:    nil,
 			want: nil,
 		},
 	}

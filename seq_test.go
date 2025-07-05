@@ -197,6 +197,24 @@ func Test_Append(t *testing.T) {
 			add:  []int{},
 			want: []int{1, 2, 3},
 		},
+		{
+			name: "single value to add",
+			seq:  seq.Yield(1, 2, 3),
+			add:  []int{4},
+			want: []int{1, 2, 3, 4},
+		},
+		{
+			name: "multiple values to empty",
+			seq:  seq.Yield[int](),
+			add:  []int{1, 2, 3, 4, 5},
+			want: []int{1, 2, 3, 4, 5},
+		},
+		{
+			name: "empty to empty",
+			seq:  seq.Yield[int](),
+			add:  []int{},
+			want: nil,
+		},
 	}
 
 	for _, tt := range tests {
@@ -1219,34 +1237,46 @@ func Test_Range_Floats(t *testing.T) {
 
 func Test_Repeat(t *testing.T) {
 	tests := []struct {
-		name  string
-		val   int
-		count int
-		want  []int
+		name string
+		val  int
+		n    int
+		want []int
 	}{
 		{
-			name:  "multiple",
-			val:   42,
-			count: 3,
-			want:  []int{42, 42, 42},
+			name: "positive count",
+			val:  42,
+			n:    3,
+			want: []int{42, 42, 42},
 		},
 		{
-			name:  "single",
-			val:   1,
-			count: 1,
-			want:  []int{1},
+			name: "zero count",
+			val:  42,
+			n:    0,
+			want: nil,
 		},
 		{
-			name:  "zero count",
-			val:   5,
-			count: 0,
-			want:  nil,
+			name: "negative count",
+			val:  42,
+			n:    -1,
+			want: nil,
+		},
+		{
+			name: "single value",
+			val:  42,
+			n:    1,
+			want: []int{42},
+		},
+		{
+			name: "large count",
+			val:  7,
+			n:    5,
+			want: []int{7, 7, 7, 7, 7},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := seq.Repeat(tt.val, tt.count)
+			got := seq.Repeat(tt.val, tt.n)
 			seqtest.AssertEqual(t, tt.want, got)
 		})
 	}
@@ -1884,6 +1914,16 @@ func Test_YieldBackwards(t *testing.T) {
 			seq:  seq.YieldBackwards[int](),
 			want: nil,
 		},
+		{
+			name: "two values",
+			seq:  seq.YieldBackwards(1, 2),
+			want: []int{2, 1},
+		},
+		{
+			name: "large sequence",
+			seq:  seq.YieldBackwards(1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
+			want: []int{10, 9, 8, 7, 6, 5, 4, 3, 2, 1},
+		},
 	}
 
 	for _, tt := range tests {
@@ -1930,6 +1970,29 @@ func Test_YieldChan(t *testing.T) {
 			name: "empty",
 			seq: func() iter.Seq[int] {
 				ch := make(chan int)
+				close(ch)
+				return seq.YieldChan(ch)
+			}(),
+			want: nil,
+		},
+		{
+			name: "large sequence",
+			seq: func() iter.Seq[int] {
+				ch := make(chan int)
+				go func() {
+					defer close(ch)
+					for i := 1; i <= 10; i++ {
+						ch <- i
+					}
+				}()
+				return seq.YieldChan(ch)
+			}(),
+			want: []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+		},
+		{
+			name: "zero values",
+			seq: func() iter.Seq[int] {
+				ch := make(chan int, 1)
 				close(ch)
 				return seq.YieldChan(ch)
 			}(),

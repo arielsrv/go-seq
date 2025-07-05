@@ -2,10 +2,12 @@ package seq_test
 
 import (
 	"iter"
+	"slices"
 	"testing"
 
 	"github.com/arielsrv/go-seq"
 	"github.com/arielsrv/go-seq/internal/seqtest"
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_Distinct(t *testing.T) {
@@ -396,6 +398,121 @@ func Test_UnionKeys(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got := seq.UnionKeys(tt.seqs...)
 			seqtest.AssertEqual2(t, tt.want, got)
+		})
+	}
+}
+
+func Test_Set_Remove(t *testing.T) {
+	tests := []struct {
+		name     string
+		set      seq.Set[int]
+		value    int
+		expected bool
+		result   seq.Set[int]
+	}{
+		{
+			name:     "remove existing value",
+			set:      seq.NewSet(1, 2, 3),
+			value:    2,
+			expected: true,
+			result:   seq.NewSet(1, 3),
+		},
+		{
+			name:     "remove non-existing value",
+			set:      seq.NewSet(1, 2, 3),
+			value:    4,
+			expected: false,
+			result:   seq.NewSet(1, 2, 3),
+		},
+		{
+			name:     "remove from empty set",
+			set:      seq.NewSet[int](),
+			value:    1,
+			expected: false,
+			result:   seq.NewSet[int](),
+		},
+		{
+			name:     "remove last value",
+			set:      seq.NewSet(1),
+			value:    1,
+			expected: true,
+			result:   seq.NewSet[int](),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := tt.set.Remove(tt.value)
+			assert.Equal(t, tt.expected, result)
+			assert.Equal(t, tt.result, tt.set)
+		})
+	}
+}
+
+func Test_Set_Values(t *testing.T) {
+	tests := []struct {
+		name     string
+		set      seq.Set[int]
+		expected []int
+	}{
+		{
+			name:     "non-empty set",
+			set:      seq.NewSet(1, 2, 3),
+			expected: []int{1, 2, 3},
+		},
+		{
+			name:     "empty set",
+			set:      seq.NewSet[int](),
+			expected: nil,
+		},
+		{
+			name:     "single value",
+			set:      seq.NewSet(42),
+			expected: []int{42},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := tt.set.Values()
+			actual := slices.Collect(result)
+			assert.ElementsMatch(t, tt.expected, actual)
+		})
+	}
+}
+
+func Test_CollectSet(t *testing.T) {
+	tests := []struct {
+		name     string
+		seq      iter.Seq[int]
+		expected seq.Set[int]
+	}{
+		{
+			name:     "normal sequence",
+			seq:      seq.Yield(1, 2, 3),
+			expected: seq.NewSet(1, 2, 3),
+		},
+		{
+			name:     "duplicate values",
+			seq:      seq.Yield(1, 2, 2, 3, 3, 3),
+			expected: seq.NewSet(1, 2, 3),
+		},
+		{
+			name:     "empty sequence",
+			seq:      seq.Yield[int](),
+			expected: seq.NewSet[int](),
+		},
+		{
+			name:     "single value",
+			seq:      seq.Yield(42),
+			expected: seq.NewSet(42),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := seq.CollectSet(tt.seq)
+			assert.Equal(t, tt.expected, result)
 		})
 	}
 }
