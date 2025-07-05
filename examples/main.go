@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	Range_Examples()
+	RangeExamples()
 }
 
 func PrintAll[V any](seq iter.Seq[V]) {

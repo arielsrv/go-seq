@@ -4,7 +4,7 @@ import (
 	"github.com/arielsrv/go-seq"
 )
 
-func Range_Examples() {
+func RangeExamples() {
 	numbers, _ := seq.Range(1, 10, 1)
 	PrintAll(numbers)
 
