@@ -2,6 +2,8 @@ github.com/arielsrv/go-seq v0.0.1 h1:M6Hwfr2zL8o2GpbG/Q9/OqH1fjwGFj3udfHQhVCeeY8
 github.com/arielsrv/go-seq v0.0.1/go.mod h1:f3DHxgOG85MB8FhZwwcdSWK17ljrPmqIoak2nloCqX4=
 github.com/arielsrv/go-seq v0.0.2 h1:e6D2mbqgvx6JutfC/EH8LdVNw/JjUfdSsP1+oSYjRIk=
 github.com/arielsrv/go-seq v0.0.2/go.mod h1:Ca6yx6JnBYk41SlRAF3Z6dDpcNZ3IzsCFOyPwwUbM5A=
+github.com/arielsrv/go-seq v0.0.3 h1:oLOnPfTurluXPog8/TL+0QX3Hs6LCoFXF1H733iJm9s=
+github.com/arielsrv/go-seq v0.0.3/go.mod h1:Ca6yx6JnBYk41SlRAF3Z6dDpcNZ3IzsCFOyPwwUbM5A=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1VwoXQT9A3Wy9MM3WgvqSxFWenqJduM=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 h1:Jamvg5psRIccs7FGNTlIRMkT8wgtp5eCXdBlqhYGL6U=

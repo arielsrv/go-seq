@@ -4,8 +4,9 @@ import (
 	"cmp"
 	"errors"
 	"iter"
+	"maps"
 
-	"golang.org/x/exp/constraints" //nolint:exptostd // Integer and Float constraints are not available in std
+	"golang.org/x/exp/constraints"
 )
 
 // Aggregate applies an accumulator function over a sequence.
@@ -752,9 +753,6 @@ func ToMap[K comparable, V any](seq iter.Seq2[K, V]) map[K]V {
 		return make(map[K]V)
 	}
 
-	result := make(map[K]V)
-	for k, v := range seq {
-		result[k] = v
-	}
+	result := maps.Collect(seq)
 	return result
 }

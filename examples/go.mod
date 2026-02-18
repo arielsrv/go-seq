@@ -1,8 +1,8 @@
 module github.com/arielsrv/go-seq/examples
 
-go 1.24.4
+go 1.26.0
 
-require github.com/arielsrv/go-seq v0.0.2
+require github.com/arielsrv/go-seq v0.0.3
 
 require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
